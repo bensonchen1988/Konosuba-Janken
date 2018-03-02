@@ -9,9 +9,9 @@ At the moment this game uses cookies to store state, so it is veeeeeery easily h
 Will move to database for that in the future, which will then allow validations with the server side previous state.  
 
 Current game rules:  
-Rock beats Paper  
-Paper beats Scissors  
-Scissors beats Rock  
+Rock beats Scissors  
+Paper beats Rock  
+Scissors beats Paper  
 EXPLOSION beats everything, but ties with another EXPLOSION  
 
 EXPLOSIONs are earned everytime the player loses 3 times in a row, upon which the lose streak counter is resetted.  
