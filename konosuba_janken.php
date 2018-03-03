@@ -1,7 +1,9 @@
 <?php
     require_once("game_logic.php");
     require_once("characters.php");
+    require_once("monsters.php");
     $GameLogic = new GameLogic();
+    $MonsterFactory = new MonsterFactory();
 
     ob_start();
 ?>
@@ -103,11 +105,13 @@
 
 <form action="konosuba_janken.php" method="post">
     <select id="monster_select" name="monster_select"> 
-      <?php  
-        for($i = 1; $i <= $GameLogic->get_number_of_monsters(); $i++){
-            echo "<option value=$i>" . $GameLogic->get_monster_name($i) . "</option>";
-        }
-      ?>
+        <!-- TODO: PROGRAMMATICALLY GENERATE THE LIST -->
+        <option value = 101>Giant Frog</option>
+        <option value = 102>Flying Cabbage</option>
+        <option value = 103>Dullahan's Undead</option>
+        <option value = 104>Dullahan</option>
+        <option value = 105>Destroyer</option>
+        <option value = 106>Hanz</option>
     <input type="submit" value="Change Monster">
     </select>
 </form>
@@ -151,44 +155,36 @@
 
 
 <?php
-    $cookie_name_stats = "player_stats_cookie";
+    $cookie_name_stats = "stats_cookie";
 
     $player_level_key = "plk";
     $player_current_hp_key = "pchk";
     $monster_current_hp_key = "mchk";
-    $monster_name_key = "mnk";
-    $monster_level_key = "mlk";
+    $monster_id_key = "midk";
     $player_exp_key = "pek";
 
 
     $PlayerCharacter = new Player();
-    $monster_level = 1;
-    $monster_name = $GameLogic->get_monster_name($monster_level);
-    $monster_current_hp = $GameLogic->get_monster_hp(1);
+    $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
     if(isset($_COOKIE[$cookie_name_stats])){
         $cook_stats = unserialize($_COOKIE[$cookie_name_stats]);
         $PlayerCharacter->set_level($cook_stats[$player_level_key]);
         $PlayerCharacter->set_exp($cook_stats[$player_exp_key]);
         $PlayerCharacter->set_current_hp($cook_stats[$player_current_hp_key]);
-        $monster_current_hp = $cook_stats[$monster_current_hp_key];
-        $monster_level = $cook_stats[$monster_level_key];
-        $monster_name = $cook_stats[$monster_name_key];
+        $Monster = $MonsterFactory->create_monster_by_id($cook_stats[$monster_id_key]);
+        $Monster->set_current_hp($cook_stats[$monster_current_hp_key]);
         // DO PLAYER LEVEL UP AND MONSTER CHANGE AT LAST STEP BEFORE COOKIE SAVE
     }
 
     if(isset($_POST["monster_select"])){
         echo "Changed Monster!<br>";
-        $monster_level = $_POST["monster_select"];
-        $monster_current_hp = $GameLogic->get_monster_hp($monster_level);
-        $monster_name = $GameLogic->get_monster_name($monster_level);
+        $Monster = $MonsterFactory->create_monster_by_id($_POST["monster_select"]);
     }
 
     if(isset($_POST["reset"])){
         echo "Resetted game! <br>";    
         $PlayerCharacter = new Player();
-        $monster_level = 1;
-        $monster_name = $GameLogic->get_monster_name($monster_level);
-        $monster_current_hp = $GameLogic->get_monster_hp(1);
+        $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
 
         $player_lose_streak = 0;
         $player_stored_nukes = 0;
@@ -224,27 +220,25 @@
 
     if($result === "p"){
         // If player wins, do damage to monster
-        $damage = $GameLogic->calculate_damage_on_monster($PlayerCharacter, $monster_level);
-        $monster_current_hp = $monster_current_hp - $damage;
+        $damage = $GameLogic->calculate_damage_on_monster($PlayerCharacter, $Monster);
+        $monster_current_hp = $Monster->get_current_hp() - $damage;
+        $Monster->set_current_hp($monster_current_hp);
         if($monster_current_hp <= 0){
             // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
             // Award exp and level up if possible
-            $exp_awarded = $GameLogic->get_monster_exp($monster_level);
+            $exp_awarded = $Monster->get_exp();
             $PlayerCharacter->gain_exp($exp_awarded);
             // HP regen award for killing monster
-            $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($monster_level));
+            $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($Monster));
             // Change monster
-            $monster_level = $GameLogic->get_monster_level($PlayerCharacter->get_level());
-            $monster_current_hp = $GameLogic->get_monster_hp($monster_level);
-            $monster_name = $GameLogic->get_monster_name($monster_level);
-
+            $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
         }
 
     }
 
     if($result === "c"){
         // If computer(monster) wins, do damage to player
-        $damage = $GameLogic->calculate_damage_on_player($monster_level, $PlayerCharacter);
+        $damage = $GameLogic->calculate_damage_on_player($Monster, $PlayerCharacter);
         //$player_current_hp = $player_current_hp - $damage;
         $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() - $damage);
         // If player dies, reset player HP and do exp penalty, and reset monster to a new one
@@ -256,9 +250,7 @@
             $PlayerCharacter->set_exp(floor($PlayerCharacter->get_exp() * (1-$GameLogic->get_exp_penalty_rate())));
 
             // Change monster
-            $monster_level = $GameLogic->get_monster_level($PlayerCharacter->get_level());
-            $monster_current_hp = $GameLogic->get_monster_hp($monster_level);
-            $monster_name = $GameLogic->get_monster_name($monster_level);
+            $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
         }
     }
 
@@ -276,14 +268,12 @@
 ?>
 
 <?php
-    $cookie_name_stats = "player_stats_cookie";
 
     $thecookie_stats = array();
     $thecookie_stats[$player_level_key] = $PlayerCharacter->get_level();
     $thecookie_stats[$player_current_hp_key] = $PlayerCharacter->get_current_hp();
-    $thecookie_stats[$monster_current_hp_key] = $monster_current_hp;
-    $thecookie_stats[$monster_name_key] = $monster_name;
-    $thecookie_stats[$monster_level_key] = $monster_level;
+    $thecookie_stats[$monster_current_hp_key] = $Monster->get_current_hp();
+    $thecookie_stats[$monster_id_key] = $Monster->get_id();
     $thecookie_stats[$player_exp_key] = $PlayerCharacter->get_exp();
 
     setcookie($cookie_name_stats, serialize($thecookie_stats), time()+86400, "/");
@@ -292,11 +282,11 @@
 
 
 <div class = "center_monster">
-    <img src = <?php echo "\"images/" . $monster_name ."\"";?> height = "300" width = "400">
+    <img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400">
     <br>
-    <?php echo $monster_name . ": Level " . $monster_level; ?>
+    <?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
     <br>
-    HP: <?php echo $monster_current_hp; ?> / <?php echo $GameLogic->get_monster_hp($monster_level) ?>,  ATK: <?php echo $GameLogic->get_monster_atk($monster_level); ?>, DEF: <?php echo $GameLogic->get_monster_def($monster_level); ?>, CRIT: <?php echo $GameLogic->get_monster_crit($monster_level); ?>
+    HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>,  ATK: <?php echo $Monster->get_atk(); ?>, DEF: <?php echo $Monster->get_def(); ?>, CRIT: <?php echo $Monster->get_crit(); ?>
 </div>
 
 

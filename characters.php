@@ -6,11 +6,22 @@
 		private $current_exp;
 		private $current_hp;
 
+		private $inventory = array();
+
 		public function __construct () {
 			$this->current_level = 1;
 			$this->current_exp = 0;
 			$this->current_hp = $this->get_hp();
 			
+		}
+
+		function add_inventory($equipment_id){
+			array_push($this->inventory, $equipment_id);
+			$this->inventory = array_unique($this->inventory);
+		}
+
+		function get_inventory(){
+			return $this->inventory;
 		}
 
 		function set_current_hp($hp){
@@ -82,5 +93,6 @@
 			return 99;
 		}
 	}
+
 
 ?>

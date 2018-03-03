@@ -1,5 +1,7 @@
 
 <?php
+require_once("characters.php");
+require_once("monsters.php");
 	class GameLogic{
 		private $monster_exp_table = array(1, 2, 3, 4, 5, 6);
 		private $monster_names_table = array("Giant Frog", "Flying Cabbage", "Dullahan's Undeads", "Dullahan", "Destroyer", "Hanz");
@@ -28,50 +30,13 @@
 			return 0.2;
 		}
 
-		function get_monster_name($monster_level){
-			return $this->monster_names_table[$monster_level-1];
-		}
-
-		function get_number_of_monsters(){
-			return sizeof($this->monster_exp_table);
-		}
-
-		function get_monster_level($player_level){
-			$max_monster_level = $this->player_level_to_monster_mapping_table[sizeof($this->player_level_to_monster_mapping_table)-1];
-			if($player_level > $max_monster_level){
-				return $max_monster_level;
-			}
-			return $this->player_level_to_monster_mapping_table[$player_level-1];
-		}
-
-		function get_monster_exp($monster_level){
-			return $this->monster_exp_table[$monster_level-1];
-		}
-
-
-
-		function get_monster_atk($current_level){
-			return $this->monster_stats_table[$current_level-1][$this->const_atk];
-		}
-
-		function get_monster_hp($current_level){
-			return $this->monster_stats_table[$current_level-1][$this->const_hp];
-		}
-
-		function get_monster_def($current_level){
-			return $this->monster_stats_table[$current_level-1][$this->const_def];
-		}
-
-		function get_monster_crit($current_level){
-			return $this->monster_stats_table[$current_level-1][$this->const_crit];
-		}
-
-		function calculate_damage_on_monster(Player $PlayerCharacter, $monster_level){
+		// Can make Player and Monster share same superclass or implement same interface to merge the following 2 functions together
+		function calculate_damage_on_monster(Player $PlayerCharacter, Monster $Monster){
 			// Crit proc
 			$crit_roll = rand(1,100);
 			$attacker_atk = $PlayerCharacter->get_atk();
 			$attacker_crit = $PlayerCharacter->get_crit();
-			$defender_def = $this->get_monster_def($monster_level);
+			$defender_def = $Monster->get_def();
 
 			if($crit_roll <= $attacker_crit){
 				$attacker_atk = $attacker_atk * 2;
@@ -84,11 +49,11 @@
 
 		}
 
-		function calculate_damage_on_player($monster_level, Player $PlayerCharacter){
+		function calculate_damage_on_player(Monster $Monster, Player $PlayerCharacter){
 			// Crit proc
 			$crit_roll = rand(1,100);
-			$attacker_atk = $this->get_monster_atk($monster_level);
-			$attacker_crit = $this->get_monster_crit($monster_level);
+			$attacker_atk = $Monster->get_atk();
+			$attacker_crit = $Monster->get_crit();
 			$defender_def = $PlayerCharacter->get_def();
 
 			if($crit_roll <= $attacker_crit){
@@ -145,8 +110,8 @@
 		    ++$winner_wins;
 		}
 
-		public function get_kill_hp_regen($monster_level){
-			return floor(0.2 * $this->get_monster_hp($monster_level));
+		public function get_kill_hp_regen($Monster){
+			return floor(0.2 * $Monster->get_hp());
 		}
 	}
 
