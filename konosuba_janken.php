@@ -1,10 +1,15 @@
 <?php
     require_once("game_logic.php");
+    require_once("characters.php");
+    $GameLogic = new GameLogic();
+
+    ob_start();
 ?>
 
 
 <!DOCTYPE>  
 <html>  
+<!-- CSS help for some terrible styling! -->
 <style>
 .center {
     margin: auto;
@@ -30,7 +35,7 @@
 </style>
 </head>
 <body>  
-<h1> ARE YOU READY TO ROCK YOUR SCISSORS IN MY PAPER?!?? </h1>
+<h1> Konosuba Rock Paper Scissors! </h1>
 
 <!-- javascript help for some sweet audio! -->
 <script type="text/javascript">
@@ -92,11 +97,22 @@
     <source src="/sounds/truepower.mp3" type="audio/mpeg">
 </audio>
 
+<form action="konosuba_janken.php" method="post">
+    <input type="submit" name="reset" value="reset">
+</form>
 
-
-
+<form action="konosuba_janken.php" method="post">
+    <select id="monster_select" name="monster_select"> 
+      <?php  
+        for($i = 1; $i <= $GameLogic->get_number_of_monsters(); $i++){
+            echo "<option value=$i>" . $GameLogic->get_monster_name($i) . "</option>";
+        }
+      ?>
+    <input type="submit" value="Change Monster">
+    </select>
+</form>
 <?php
-    $GameLogic = new GameLogic();
+    // meta data about game progress
     $cookie_name = "konosuba_janken";
 
     $player_lose_streak_key = "ulsk";
@@ -144,21 +160,42 @@
     $monster_level_key = "mlk";
     $player_exp_key = "pek";
 
-    $player_level = 1;
+
+    $PlayerCharacter = new Player();
     $monster_level = 1;
     $monster_name = $GameLogic->get_monster_name($monster_level);
-    $player_exp = 0;
     $monster_current_hp = $GameLogic->get_monster_hp(1);
-    $player_current_hp = $GameLogic->get_hp(1);
     if(isset($_COOKIE[$cookie_name_stats])){
         $cook_stats = unserialize($_COOKIE[$cookie_name_stats]);
-        $player_level = $cook_stats[$player_level_key];
-        $player_exp = $cook_stats[$player_exp_key];
-        $player_current_hp = $cook_stats[$player_current_hp_key];
+        $PlayerCharacter->set_level($cook_stats[$player_level_key]);
+        $PlayerCharacter->set_exp($cook_stats[$player_exp_key]);
+        $PlayerCharacter->set_current_hp($cook_stats[$player_current_hp_key]);
         $monster_current_hp = $cook_stats[$monster_current_hp_key];
         $monster_level = $cook_stats[$monster_level_key];
         $monster_name = $cook_stats[$monster_name_key];
         // DO PLAYER LEVEL UP AND MONSTER CHANGE AT LAST STEP BEFORE COOKIE SAVE
+    }
+
+    if(isset($_POST["monster_select"])){
+        echo "Changed Monster!<br>";
+        $monster_level = $_POST["monster_select"];
+        $monster_current_hp = $GameLogic->get_monster_hp($monster_level);
+        $monster_name = $GameLogic->get_monster_name($monster_level);
+    }
+
+    if(isset($_POST["reset"])){
+        echo "Resetted game! <br>";    
+        $PlayerCharacter = new Player();
+        $monster_level = 1;
+        $monster_name = $GameLogic->get_monster_name($monster_level);
+        $monster_current_hp = $GameLogic->get_monster_hp(1);
+
+        $player_lose_streak = 0;
+        $player_stored_nukes = 0;
+        $player_wins = 0;
+        $cpu_lose_streak = 0;
+        $cpu_stored_nukes = 0;
+        $cpu_wins = 0;
     }
 
 
@@ -166,74 +203,67 @@
 
 
 <?php  
-$choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
-$computer_choice = rand(0, 2);
-if($cpu_stored_nukes > 0){
-    $computer_choice = rand(0, 3);
-}
-$computer_choice_display = $choices[$computer_choice];
+    $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
+    $computer_choice = rand(0, 2);
+    if($cpu_stored_nukes > 0){
+        $computer_choice = rand(0, 3);
+    }
+    $computer_choice_display = $choices[$computer_choice];
 
-if($player_input === -1){
-    $player_input_display = "Please make a choice!";
-}
-else{
-	$player_input_display = $choices[$player_input];
-}
-echo "Your choice: $player_input_display<br>";
-echo "Computer's choice: $computer_choice_display";
-echo "<br>";
+    if($player_input === -1){
+        $player_input_display = "Please make a choice!";
+    }
+    else{
+    	$player_input_display = $choices[$player_input];
+    }
+    echo "Your choice: $player_input_display<br>";
+    echo "Computer's choice: $computer_choice_display";
+    echo "<br>";
 
-$result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins);
+    $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins);
 
-if($result === "p"){
-    // If player wins, do damage to monster
-    $damage = $GameLogic->calculate_damage_on_monster($player_level, $monster_level);
-    $monster_current_hp = $monster_current_hp - $damage;
-    if($monster_current_hp <= 0){
-        // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
-        // Award exp and level up if possible
-        $exp_awarded = $GameLogic->get_monster_exp($monster_level);
-        $player_exp = $player_exp + $exp_awarded;
-        $current_level_exp_req = $GameLogic->get_required_exp($player_level);
-        while($player_exp >= $current_level_exp_req){
-            $player_exp = $player_exp - $current_level_exp_req;
-            // capped level up
-            $player_level += 1;
-            if($player_level > $GameLogic->get_max_level()){
-                $player_level = $GameLogic->get_max_level();
-            }
-            $current_level_exp_req = $GameLogic->get_required_exp($player_level);
-            $player_current_hp = $GameLogic->get_hp($player_level);
+    if($result === "p"){
+        // If player wins, do damage to monster
+        $damage = $GameLogic->calculate_damage_on_monster($PlayerCharacter, $monster_level);
+        $monster_current_hp = $monster_current_hp - $damage;
+        if($monster_current_hp <= 0){
+            // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
+            // Award exp and level up if possible
+            $exp_awarded = $GameLogic->get_monster_exp($monster_level);
+            $PlayerCharacter->gain_exp($exp_awarded);
+            // HP regen award for killing monster
+            $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($monster_level));
+            // Change monster
+            $monster_level = $GameLogic->get_monster_level($PlayerCharacter->get_level());
+            $monster_current_hp = $GameLogic->get_monster_hp($monster_level);
+            $monster_name = $GameLogic->get_monster_name($monster_level);
+
         }
-        // Change monster
-        $monster_level = $GameLogic->get_monster_level($player_level);
-        $monster_current_hp = $GameLogic->get_hp($monster_level);
-        $monster_name = $GameLogic->get_monster_name($monster_level);
+
     }
 
-}
+    if($result === "c"){
+        // If computer(monster) wins, do damage to player
+        $damage = $GameLogic->calculate_damage_on_player($monster_level, $PlayerCharacter);
+        //$player_current_hp = $player_current_hp - $damage;
+        $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() - $damage);
+        // If player dies, reset player HP and do exp penalty, and reset monster to a new one
+        if($PlayerCharacter->get_current_hp()<= 0){
+            // Reset HP and do exp penalty;
+            //$player_current_hp = $GameLogic->get_hp($player_level);
+            $PlayerCharacter->set_current_hp($PlayerCharacter->get_hp());
+            //$player_exp = floor($player_exp * (1-$GameLogic->get_exp_penalty_rate()));
+            $PlayerCharacter->set_exp(floor($PlayerCharacter->get_exp() * (1-$GameLogic->get_exp_penalty_rate())));
 
-if($result === "c"){
-    // If computer(monster) wins, do damage to player
-    $damage = $GameLogic->calculate_damage_on_player($monster_level, $player_level);
-    $player_current_hp = $player_current_hp - $damage;
-    // If player dies, reset player HP and do exp penalty, and reset monster to a new one
-    if($player_current_hp <= 0){
-        // Reset HP and do exp penalty;
-        $player_current_hp = $GameLogic->get_hp($player_level);
-        $player_exp = floor($player_exp * (1-$GameLogic->get_exp_penalty_rate()));
-
-        // Change monster
-        $monster_level = $GameLogic->get_monster_level($player_level);
-        $monster_current_hp = $GameLogic->get_hp($monster_level);
-        $monster_name = $GameLogic->get_monster_name($monster_level);
+            // Change monster
+            $monster_level = $GameLogic->get_monster_level($PlayerCharacter->get_level());
+            $monster_current_hp = $GameLogic->get_monster_hp($monster_level);
+            $monster_name = $GameLogic->get_monster_name($monster_level);
+        }
     }
-}
 
 ?>  
 <?php
-
-
     $thecookie = array();
     $thecookie[$player_lose_streak_key] = $player_lose_streak;
     $thecookie[$player_stored_nukes_key] = $player_stored_nukes;
@@ -249,15 +279,14 @@ if($result === "c"){
     $cookie_name_stats = "player_stats_cookie";
 
     $thecookie_stats = array();
-    $thecookie_stats[$player_level_key] = $player_level;
-    $thecookie_stats[$player_current_hp_key] = $player_current_hp;
+    $thecookie_stats[$player_level_key] = $PlayerCharacter->get_level();
+    $thecookie_stats[$player_current_hp_key] = $PlayerCharacter->get_current_hp();
     $thecookie_stats[$monster_current_hp_key] = $monster_current_hp;
     $thecookie_stats[$monster_name_key] = $monster_name;
     $thecookie_stats[$monster_level_key] = $monster_level;
-    $thecookie_stats[$player_exp_key] = $player_exp;
+    $thecookie_stats[$player_exp_key] = $PlayerCharacter->get_exp();
 
     setcookie($cookie_name_stats, serialize($thecookie_stats), time()+86400, "/");
-
 
 ?>
 
@@ -304,25 +333,23 @@ if($result === "c"){
            // echo "</div>";
          }
        //  echo "<br>";
+         ob_end_flush();
     ?>
 
 </table>
-    You: Level <?php echo $player_level; ?>
+    You: Level <?php echo $PlayerCharacter->get_level(); ?>
     <br>
-    HP: <?php echo $player_current_hp; ?> / <?php echo $GameLogic->get_hp($player_level) ?>,  ATK: <?php echo $GameLogic->get_atk($player_level); ?>, DEF: <?php echo $GameLogic->get_def($player_level); ?>, CRIT: <?php echo $GameLogic->get_crit($player_level); ?>
+    HP: <?php echo $PlayerCharacter->get_current_hp(); ?> / <?php echo $PlayerCharacter->get_hp() ?>,  ATK: <?php echo $PlayerCharacter->get_atk(); ?>, DEF: <?php echo $PlayerCharacter->get_def(); ?>, CRIT: <?php echo $PlayerCharacter->get_crit(); ?>
     <br>
-    EXP: <?php echo $player_exp; ?> / <?php echo $GameLogic->get_required_exp($player_level) ?>
+    EXP: <?php echo $PlayerCharacter->get_exp(); ?> / <?php echo $PlayerCharacter->get_required_exp() ?>
 </div>
 
 
-
-    <div class = "right">
-        <br> Your lose streak: <?php echo $player_lose_streak ?>
-        <br> Your Explosions available: <?php echo $player_stored_nukes ?>
-        <br> Your total wins: <?php echo $player_wins ?>
-        <br> Computer's lose streak: <?php echo $cpu_lose_streak ?>
-        <br> Computer's Explosions available: <?php echo $cpu_stored_nukes ?>
-        <br> Computer's total wins: <?php echo $cpu_wins ?>
-    </div>
+<br> Your lose streak: <?php echo $player_lose_streak ?>
+<br> Your Explosions available: <?php echo $player_stored_nukes ?>
+<br> Your total wins: <?php echo $player_wins ?>
+<br> Computer's lose streak: <?php echo $cpu_lose_streak ?>
+<br> Computer's Explosions available: <?php echo $cpu_stored_nukes ?>
+<br> Computer's total wins: <?php echo $cpu_wins ?>
 </body>  
 </html>  

@@ -1,10 +1,8 @@
 
 <?php
 	class GameLogic{
-		private $exp_table = array(3, 7, 10, 14, 18, 20);
 		private $monster_exp_table = array(1, 2, 3, 4, 5, 6);
 		private $monster_names_table = array("Giant Frog", "Flying Cabbage", "Dullahan's Undeads", "Dullahan", "Destroyer", "Hanz");
-		private $player_stats_table = array();
 		private $monster_stats_table = array();
 
 		private $player_level_to_monster_mapping_table = array(1, 2, 3, 4, 5, 6);
@@ -17,12 +15,6 @@
 
 
 		public function __construct () {
-			$this->player_stats_table[0] = array($this->const_atk => 5, $this->const_def=> 1, $this->const_hp=> 20, $this->const_crit=> 5);
-			$this->player_stats_table[1] = array($this->const_atk => 8, $this->const_def=> 2, $this->const_hp=> 35, $this->const_crit=> 6);
-			$this->player_stats_table[2] = array($this->const_atk => 13, $this->const_def=> 3, $this->const_hp=> 55, $this->const_crit=> 7);
-			$this->player_stats_table[3] = array($this->const_atk => 19, $this->const_def=> 5, $this->const_hp=> 76, $this->const_crit=> 8);
-			$this->player_stats_table[4] = array($this->const_atk => 27, $this->const_def=> 7, $this->const_hp=> 102, $this->const_crit=> 9);
-			$this->player_stats_table[5] = array($this->const_atk => 39, $this->const_def=> 10, $this->const_hp=> 160, $this->const_crit=> 10);
 
 			$this->monster_stats_table[0] = array($this->const_atk => 2, $this->const_def=> 1, $this->const_hp=> 20, $this->const_crit=> 2);
 			$this->monster_stats_table[1] = array($this->const_atk => 3, $this->const_def=> 2, $this->const_hp=> 35, $this->const_crit=> 3);
@@ -40,32 +32,20 @@
 			return $this->monster_names_table[$monster_level-1];
 		}
 
+		function get_number_of_monsters(){
+			return sizeof($this->monster_exp_table);
+		}
+
 		function get_monster_level($player_level){
+			$max_monster_level = $this->player_level_to_monster_mapping_table[sizeof($this->player_level_to_monster_mapping_table)-1];
+			if($player_level > $max_monster_level){
+				return $max_monster_level;
+			}
 			return $this->player_level_to_monster_mapping_table[$player_level-1];
 		}
 
 		function get_monster_exp($monster_level){
 			return $this->monster_exp_table[$monster_level-1];
-		}
-
-		function get_required_exp($current_level){
-			return $this->exp_table[$current_level-1];
-		}
-
-		function get_atk($current_level){
-			return $this->player_stats_table[$current_level-1][$this->const_atk];
-		}
-
-		function get_hp($current_level){
-			return $this->player_stats_table[$current_level-1][$this->const_hp];
-		}
-
-		function get_def($current_level){
-			return $this->player_stats_table[$current_level-1][$this->const_def];
-		}
-
-		function get_crit($current_level){
-			return $this->player_stats_table[$current_level-1][$this->const_crit];
 		}
 
 
@@ -86,16 +66,11 @@
 			return $this->monster_stats_table[$current_level-1][$this->const_crit];
 		}
 
-
-		function get_max_level(){
-			return sizeof($this->exp_table);
-		}
-
-		function calculate_damage_on_monster($player_level, $monster_level){
+		function calculate_damage_on_monster(Player $PlayerCharacter, $monster_level){
 			// Crit proc
 			$crit_roll = rand(1,100);
-			$attacker_atk = $this->get_atk($player_level);
-			$attacker_crit = $this->get_crit($player_level);
+			$attacker_atk = $PlayerCharacter->get_atk();
+			$attacker_crit = $PlayerCharacter->get_crit();
 			$defender_def = $this->get_monster_def($monster_level);
 
 			if($crit_roll <= $attacker_crit){
@@ -109,12 +84,12 @@
 
 		}
 
-		function calculate_damage_on_player($monster_level, $player_level){
+		function calculate_damage_on_player($monster_level, Player $PlayerCharacter){
 			// Crit proc
 			$crit_roll = rand(1,100);
 			$attacker_atk = $this->get_monster_atk($monster_level);
 			$attacker_crit = $this->get_monster_crit($monster_level);
-			$defender_def = $this->get_def($player_level);
+			$defender_def = $PlayerCharacter->get_def();
 
 			if($crit_roll <= $attacker_crit){
 				$attacker_atk = $attacker_atk * 2;
@@ -169,5 +144,10 @@
 		    $winner_lose_streak = 0;
 		    ++$winner_wins;
 		}
+
+		public function get_kill_hp_regen($monster_level){
+			return floor(0.2 * $this->get_monster_hp($monster_level));
+		}
 	}
+
 ?>
