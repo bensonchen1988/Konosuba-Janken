@@ -20,17 +20,16 @@ Hover your mouse over it to hear a random Megumin explosion related sound clip!
 
 Players have the following stats based on their level (currently no variations nor allocatable points etc):  
 ATK - Damage you do to the enemy upon winning an RPS round.  
-HP - How much damage you take before you die.  
+HP - How much damage you can take before you die.  
 DEF - Directly mitigates damage in the form of enemyATK - yourDEF, to a minimum of 1 damage.   
 CRIT - % chance of dealing DEF ignoring double damage.
 
+Upon defeating enemies, players now recover a small amount of HP equal to a fraction of the defeated enemy's max HP.
 
-Players currently do not recover HP outside of dying or leveling up.
-
-Current max level - 6
+Current max level - 99
 
 Future features:  
 
 -Randomize encounters to be within a range of player level  
--Means of regenerating HP, probably via defeating monsters  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
+-Equipment drops from defeating monsters. Equipment may simply grant stats, or special effects such as "winning with Rocks lets you deal double damage"
