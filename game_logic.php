@@ -2,6 +2,8 @@
 <?php
 require_once("player.php");
 require_once("monsters.php");
+require_once("accessory_effects.php");
+
 	class GameLogic{
 		private $lose_streak_to_get_explosion = 3;
 
@@ -22,44 +24,64 @@ require_once("monsters.php");
 			return 0.2;
 		}
 
+
 		function calculate_damage_on_monster(Player $PlayerCharacter, Monster $Monster){
 			// Crit proc
 			$crit_roll = rand(1,100);
-			$attacker_atk = $PlayerCharacter->get_atk();
+			$attacker = new CombatData();
+			$defender = new CombatData();
+			$attacker->base_atk = $PlayerCharacter->get_atk();
+			$attacker->input = $PlayerCharacter->get_input();
 			if($PlayerCharacter->has_weapon()){
-				$attacker_atk += $PlayerCharacter->get_weapon()->get_atk();
+				$attacker->bonus_atk += $PlayerCharacter->get_weapon()->get_atk();
 			}
-			$attacker_crit = $PlayerCharacter->get_crit();
-			$defender_def = $Monster->get_def();
+			$attacker->crit = $PlayerCharacter->get_crit();
 
-			if($crit_roll <= $attacker_crit){
-				$attacker_atk = $attacker_atk * 2;
-				$defender_def = 0;
-				echo "<br> CRITICAL STRIKE!";
+			$defender->def = $Monster->get_def();
+
+			if($PlayerCharacter->has_accessory()){
+				$this->apply_effects($PlayerCharacter->get_accessory()->get_effects(), $attacker);
 			}
-			$damage = max(1, $attacker_atk - $defender_def);
-			echo " You did " . $damage ." damage!";
+
+			if($crit_roll <= $attacker->crit){
+				$attacker->base_atk = $attacker->base_atk * 2;
+				$attacker->bonus_atk = $attacker->bonus_atk * 2;
+				$defender->def = 0;
+				$GLOBALS["console_output_buffer"] .= "\nCRITICAL STRIKE!";
+			}
+			$damage = max(1, $attacker->get_total_atk() - $defender->def);
+			$GLOBALS["console_output_buffer"] .= " You did " . $damage ." damage!";
 			return $damage;
 
 		}
 
 		function calculate_damage_on_player(Monster $Monster, Player $PlayerCharacter){
+			if($Monster->get_atk() == 0){
+				return 0;
+			}
 			// Crit proc
 			$crit_roll = rand(1,100);
-			$attacker_atk = $Monster->get_atk();
-			$attacker_crit = $Monster->get_crit();
-			$defender_def = $PlayerCharacter->get_def();
+			$attacker = new CombatData();
+			$defender = new CombatData();
+			$attacker->base_atk = $Monster->get_atk();
+			$attacker->crit = $Monster->get_crit();
+			$defender->def = $PlayerCharacter->get_def();
 			if($PlayerCharacter->has_armor()){
-				$defender_def += $PlayerCharacter->get_armor()->get_def();
+				$defender->def += $PlayerCharacter->get_armor()->get_def();
 			}
 
-			if($crit_roll <= $attacker_crit){
-				$attacker_atk = $attacker_atk * 2;
-				$defender_def = 0;
-				echo "<br> CRITICAL STRIKE!";
+			if($PlayerCharacter->has_accessory()){
+				$this->apply_effects($PlayerCharacter->get_accessory()->get_effects(), $defender);
 			}
-			$damage = max(1, $attacker_atk - $defender_def);
-			echo " You took " . $damage ." damage!";
+
+			if($crit_roll <= $attacker->crit){
+				$attacker->base_atk = $attacker->base_atk * 2;
+				$attacker->bonus_atk = $attacker->bonus_atk * 2;
+				$defender->def = 0;
+				$GLOBALS["console_output_buffer"] .= "\nCRITICAL STRIKE!";
+			}
+			$damage = max(1, $attacker->get_total_atk() - $defender->def);
+			$GLOBALS["console_output_buffer"] .= "\nYou took " . $damage ." damage!";
 			return $damage;
 
 		}
@@ -75,7 +97,7 @@ require_once("monsters.php");
 				return "e";
 			}
 			if($computer_choice == $player_input){
-				echo "DRAW GAME!";
+				$GLOBALS["console_output_buffer"] .= "DRAW GAME!";
 				return "d";
 			}
 		    if($player_input == 3 || $computer_choice == 3){
@@ -96,13 +118,13 @@ require_once("monsters.php");
 		    return "p";
 		}
 
-		public function process_win(&$winner_wins, &$winner_lose_streak, &$loser_lose_streak, &$loser_stored_nukes, $winner_name, $loser_name){
-		    echo "$winner_name Win!";
+		private function process_win(&$winner_wins, &$winner_lose_streak, &$loser_lose_streak, &$loser_stored_nukes, $winner_name, $loser_name){
+		    $GLOBALS["console_output_buffer"] .= "$winner_name Win!";
 		    $loser_lose_streak++;
 		    if($loser_lose_streak >= $this->lose_streak_to_get_explosion){
 		        $loser_lose_streak = 0;
 		        $loser_stored_nukes++;
-		        echo "<br> $loser_name gained an Explosion for losing ". $this->lose_streak_to_get_explosion . " times in a row!";
+		        $GLOBALS["console_output_buffer"] .= "\n$loser_name gained an Explosion for losing ". $this->lose_streak_to_get_explosion . " times in a row!";
 		    }
 		    $winner_lose_streak = 0;
 		    ++$winner_wins;
@@ -111,6 +133,49 @@ require_once("monsters.php");
 		public function get_kill_hp_regen($Monster){
 			return floor(0.2 * $Monster->get_hp());
 		}
+
+		private function apply_effects($AccessoryEffects_array, $CombatData){
+			foreach($AccessoryEffects_array as $AccessoryEffects){
+				switch($AccessoryEffects->get_type()){
+					case AccessoryEffects::TYPE_STATS_BOOST: $this->apply_stat_effects($AccessoryEffects, $CombatData); break;
+					case AccessoryEffects::TYPE_ROCK_ATTACK_BOOST:
+					case AccessoryEffects::TYPE_PAPER_ATTACK_BOOST: 
+					case AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST: $this->apply_type_effects($AccessoryEffects, $CombatData); break;
+					default: break;
+				}
+			}
+		}
+
+		private function apply_stat_effects($AccessoryEffects, $CombatData){
+			$CombatData->bonus_atk += $AccessoryEffects->get_atk_boost();
+			$CombatData->def += $AccessoryEffects->get_def_boost();
+			$CombatData->crit += $AccessoryEffects->get_crit_boost();
+		}
+
+		private function apply_type_effects($AccessoryEffects, $CombatData){
+			switch($AccessoryEffects->get_type()){
+				case AccessoryEffects::TYPE_ROCK_ATTACK_BOOST:if($CombatData->input == 0){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
+				case AccessoryEffects::TYPE_PAPER_ATTACK_BOOST:if($CombatData->input == 1){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
+				case AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST:if($CombatData->input == 2){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
+				default: break;
+			}
+		}
+
+	}
+
+
+	class CombatData{
+		public $base_atk = 0;
+		public $bonus_atk = 0;
+		public $def = 0;
+		public $crit = 0;
+		// Rock:0 Paper:1 Scissors:2
+		public $input = -1;
+
+		function get_total_atk(){
+			return floor($this->base_atk + $this->bonus_atk);
+		}
+
 	}
 
 ?>

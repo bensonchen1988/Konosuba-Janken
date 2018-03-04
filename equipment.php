@@ -1,5 +1,32 @@
 <?php
 
+require_once("weapons.php");
+require_once("accessories.php");
+require_once("armors.php");
+
+/*
+*	Weapon IDs: 100001~199999
+*	Armor IDs: 200001~299999
+*	Accessory IDs: 300001~399999
+*/
+class EquipmentFactory{
+
+	function get_equipment($equipment_id){
+		switch($equipment_id){
+			// Weapons
+			case BrassKnuckles::ID: return new BrassKnuckles();
+			case WoodenSword::ID: return new WoodenSword();
+			// Armors
+			case FrogSkin::ID: return new FrogSkin();
+			// Accessories
+			case LuckyPebbles::ID: return new LuckyPebbles();
+			case RockAmulet::ID: return new RockAmulet();
+			case SoDamageMuchWowSuchOP::ID: return new SoDamageMuchWowSuchOP();
+			default: return new Unequipped();
+		}
+	}
+}
+
 // Ideally, would use a DB to store and keep track of a list of all equipment IDs
 interface Equipment{
 	const WEAPON = 0;
@@ -15,14 +42,6 @@ interface Equipment{
 	*/
 	public function get_stats_string();
 
-}
-abstract class Accessory implements Equipment{
-
-	function get_equipment_type(){
-		return Equipment::ACCESSORY;
-	}
-
-	abstract function get_effects();
 }
 
 class Unequipped implements Equipment{
@@ -42,24 +61,6 @@ class Unequipped implements Equipment{
 	}
 }
 
-/*
-*	Weapon IDs: 100001~199999
-*	Armor IDs: 200001~299999
-*	Accessory IDs: 300001~399999
-*/
-class EquipmentFactory{
-
-	function get_equipment($equipment_id){
-		switch($equipment_id){
-			// Weapons
-			case BrassKnuckles::ID: return new BrassKnuckles();
-			case WoodenSword::ID: return new WoodenSword();
-			// Armors
-			case FrogSkin::ID: return new FrogSkin();
-			default: return new Unequipped();
-		}
-	}
-}
 
 
 

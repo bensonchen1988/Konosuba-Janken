@@ -11,6 +11,7 @@ require_once("equipment.php");
 		private $equipped_weapon;
 		private $equipped_armor;
 		private $equipped_accessory;
+		private $player_input = -1;
 
 		private $inventory = array();
 
@@ -30,6 +31,14 @@ require_once("equipment.php");
 				return True;
 			}
 			return False;
+		}
+
+		function set_input($input){
+			$this->player_input = $input;
+		}
+
+		function get_input(){
+			return $this->player_input;
 		}
 
 		function has_armor(){

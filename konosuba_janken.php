@@ -7,6 +7,7 @@
     $MonsterFactory = new MonsterFactory();
     $EquipmentFactory = new EquipmentFactory();
     $cookie_expiration_in_seconds = 86400*30;
+    $GLOBALS["console_output_buffer"] = "";
     ob_start();
 ?>
 
@@ -78,7 +79,7 @@
 </audio>
 
 <form action="konosuba_janken.php" method="post">
-    <input type="submit" name="reset" value="reset">
+    <input type="submit" name="reset" value="Reset Game">
 </form>
 
 <form action="konosuba_janken.php" method="post">
@@ -90,6 +91,7 @@
         <option value = 104>Dullahan</option>
         <option value = 105>Destroyer</option>
         <option value = 106>Hanz</option>
+        <option value = 999>Training Dummy</option>
     <input type="submit" value="Change Monster">
     </select>
 </form>
@@ -122,15 +124,6 @@
     }
 
 ?>
-
-<?php
-    $player_input = -1;
-    
-    if(isset($_POST["player_input"])){
-        $player_input = $_POST['player_input'];
-    }
-?>
-
 
 <?php
     $cookie_name_stats = "stats_cookie";
@@ -182,10 +175,10 @@
     function equipment_status_output($old_equipment, $equipment){
         if($old_equipment->get_id() !== $equipment->get_id()){
             if($equipment->get_id() === Unequipped::ID){
-                echo "You've removed " . $old_equipment->get_name() . "!<br>";
+                $GLOBALS["console_output_buffer"] .=  "You've removed " . $old_equipment->get_name() . "!\n";
             }
             else{
-                echo "You've equipped " . $equipment->get_name() . "!<br>";
+                $GLOBALS["console_output_buffer"] .=   "You've equipped " . $equipment->get_name() . "!\n";
             }
         }
     }
@@ -198,12 +191,15 @@
 
 
     if(isset($_POST["monster_select"])){
-        echo "Changed Monster!<br>";
+        $GLOBALS["console_output_buffer"] .= "Changed Monster!\n";
         $Monster = $MonsterFactory->create_monster_by_id($_POST["monster_select"]);
+        $player_lose_streak = 0;
+        $cpu_lose_streak = 0;
+        $cpu_stored_nukes = 0;
     }
 
     if(isset($_POST["reset"])){
-        echo "Resetted game! <br>";    
+        $GLOBALS["console_output_buffer"] .= "Resetted game!\n"; 
         $PlayerCharacter = new Player();
         $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
 
@@ -218,6 +214,16 @@
 
 ?>
 
+<?php
+    $player_input = -1;
+    
+    if(isset($_POST["player_input"])){
+        $player_input = $_POST["player_input"];
+        $PlayerCharacter->set_input($player_input);
+    }
+?>
+
+
 
 <?php  
     $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
@@ -229,14 +235,13 @@
     }
     else{
     	$player_input_display = $choices[$player_input];
-        echo "Your choice: $player_input_display<br>";
+        $GLOBALS["console_output_buffer"] .= "Your choice: $player_input_display\n";
         if($cpu_stored_nukes > 0){
             $computer_choice = rand(0, 3);
         }
         $computer_choice_display = $choices[$computer_choice];
-        echo $Monster->get_name() ."'s choice: $computer_choice_display";
+        $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $computer_choice_display\n";
     }
-    echo "<br>";
 
     $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster->get_name());
 
@@ -257,12 +262,17 @@
                 foreach($Monster->get_loots() as $id){
                     $PlayerCharacter->add_inventory($id);
                     $equipment = $EquipmentFactory->get_equipment($id);
-                    echo "<br>";
-                    echo "You got a " . $equipment->get_name() . "!";
+                    $GLOBALS["console_output_buffer"] .= "\nYou got a " . $equipment->get_name() . "!";
                 }
             }
+            $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!\n";
             // Change monster
             $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
+
+            // Reset streaks
+            $player_lose_streak = 0;
+            $cpu_lose_streak = 0;
+            $cpu_stored_nukes = 0;
         }
 
     }
@@ -286,7 +296,6 @@
     }
 
 ?>  
-    <br>
 <?php
     $thecookie = array();
     $thecookie[$player_lose_streak_key] = $player_lose_streak;
@@ -431,14 +440,14 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
         echo "HP: " . $PlayerCharacter->get_current_hp() . "/" . $PlayerCharacter->get_hp();
         echo ", ";
         echo "ATK: " . $PlayerCharacter->get_atk();
-        if ($PlayerCharacter->has_weapon()){
-            echo "+". $PlayerCharacter->get_weapon()->get_atk();
-        }
+        //if ($PlayerCharacter->has_weapon()){
+        //    echo "+". $PlayerCharacter->get_weapon()->get_atk();
+        //}
         echo ", ";
         echo "DEF: " . $PlayerCharacter->get_def();
-        if ($PlayerCharacter->has_armor()){
-            echo "+". $PlayerCharacter->get_armor()->get_def();
-        }
+        //if ($PlayerCharacter->has_armor()){
+        //    echo "+". $PlayerCharacter->get_armor()->get_def();
+        //}
         echo ", ";
         echo "CRIT: " . $PlayerCharacter->get_crit();
         echo "<br>";
@@ -446,7 +455,15 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
         echo "<br>";
     ?>
 
-<br>
+<style>
+textarea{
+    resize: none;
+}
+</style>
+ <textarea rows="5" cols="60" readonly style="background-color: lightcyan">
+<?php echo $GLOBALS["console_output_buffer"]; ?>
+</textarea> 
+
 <br> Your lose streak: <?php echo $player_lose_streak ?>
 <br> Your Explosions available: <?php echo $player_stored_nukes ?>
 <br> Your total wins: <?php echo $player_wins ?>

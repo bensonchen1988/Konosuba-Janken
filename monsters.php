@@ -2,6 +2,7 @@
 require_once("equipment.php");
 require_once("weapons.php");
 require_once("armors.php");
+require_once("accessories.php");
 
 	abstract class Monster{
 
@@ -26,10 +27,12 @@ require_once("armors.php");
 		//returns array
 		function get_loots(){
 			$result = array();
-			foreach($this->loot_table as $id => $droprate){
-				// $value/10000 chance of dropping
-				if(rand(1, 10000) <= $droprate){
-					array_push($result, $id);
+			if(sizeof($this->loot_table) != 0){
+				foreach($this->loot_table as $id => $droprate){
+					// $value/10000 chance of dropping
+					if(rand(1, 10000) <= $droprate){
+						array_push($result, $id);
+					}
 				}
 			}
 			return $result;
@@ -60,6 +63,7 @@ require_once("armors.php");
 				case Dullahan::ID: return new Dullahan();
 				case Destroyer::ID: return new Destroyer();
 				case Hanz::ID: return new Hanz();
+				case TrainingDummy::ID: return new TrainingDummy();
 				default: throw new Exception("Invalid monster ID");
 			}
 		}
@@ -105,6 +109,7 @@ require_once("armors.php");
 		const ID = 102;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
+			$this->loot_table = array(RockAmulet::ID=>5000);
 		}
 		function get_id(){
 			return FlyingCabbage::ID;
@@ -130,16 +135,13 @@ require_once("armors.php");
 		function get_crit(){
 			return 3;
 		}
-		//returns array
-		function get_loots(){
-
-		}
 	}
 	class DullahansUndeads extends Monster{
 
 		const ID = 103;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
+			$this->loot_table = array(LuckyPebbles::ID=>10000);
 		}
 		function get_id(){
 			return DullahansUndeads::ID;
@@ -164,10 +166,6 @@ require_once("armors.php");
 		}
 		function get_crit(){
 			return 4;
-		}
-		//returns array
-		function get_loots(){
-
 		}
 	}
 	class Dullahan extends Monster{
@@ -200,10 +198,6 @@ require_once("armors.php");
 		function get_crit(){
 			return 5;
 		}
-		//returns array
-		function get_loots(){
-
-		}
 	}
 	class Destroyer extends Monster{
 
@@ -235,16 +229,13 @@ require_once("armors.php");
 		function get_crit(){
 			return 6;
 		}
-		//returns array
-		function get_loots(){
-
-		}
 	}
 	class Hanz extends Monster{
 
 		const ID = 106;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
+			$this->loot_table = array(SoDamageMuchWowSuchOP::ID=>10000);
 		}
 		function get_id(){
 			return Hanz::ID;
@@ -270,9 +261,38 @@ require_once("armors.php");
 		function get_crit(){
 			return 7;
 		}
-		//returns array
-		function get_loots(){
+	}
 
+
+	class TrainingDummy extends Monster{
+
+		const ID = 999;
+		function __construct(){
+			$this->current_hp = $this->get_hp();
+		}
+		function get_id(){
+			return TrainingDummy::ID;
+		}
+		function get_level(){
+			return 999;
+		}
+		function get_name(){
+			return "Training Dummy";
+		}
+		function get_atk(){
+			return 0;
+		}
+		function get_def(){
+			return 0;
+		}
+		function get_hp(){
+			return 100000000;
+		}
+		function get_exp(){
+			return 0;
+		}
+		function get_crit(){
+			return 0;
 		}
 	}
 
