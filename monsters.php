@@ -1,8 +1,13 @@
 <?php
+require_once("equipment.php");
+require_once("weapons.php");
+require_once("armors.php");
 
 	abstract class Monster{
 
 		protected $current_hp;
+		// Key: equipment_id, Value: Drop rate (out of 10000)
+		protected $loot_table;
 
 		abstract function get_level();
 		abstract function get_id();
@@ -12,12 +17,22 @@
 		abstract function get_hp();
 		abstract function get_exp();
 		abstract function get_crit();
-		abstract function get_loots();
 		function set_current_hp($hp){
 			$this->current_hp = $hp;
 		}
 		function get_current_hp(){
 			return $this->current_hp;
+		}
+		//returns array
+		function get_loots(){
+			$result = array();
+			foreach($this->loot_table as $id => $droprate){
+				// $value/10000 chance of dropping
+				if(rand(1, 10000) <= $droprate){
+					array_push($result, $id);
+				}
+			}
+			return $result;
 		}
 
 	}
@@ -33,7 +48,7 @@
 				case 4: return new Dullahan();
 				case 5: return new Destroyer();
 				case 6: return new Hanz();
-				default: return new Hanz();
+				default: return new Hanz(); //Catch all for overleveled players
 			}
 		}
 
@@ -45,7 +60,7 @@
 				case Dullahan::ID: return new Dullahan();
 				case Destroyer::ID: return new Destroyer();
 				case Hanz::ID: return new Hanz();
-				default: return new GiantFrog();
+				default: throw new Exception("Invalid monster ID");
 			}
 		}
 	}
@@ -55,7 +70,10 @@
 		const ID = 101;
 
 		function __construct(){
+			// Initialize HP to max
 			$this->current_hp = $this->get_hp();
+			// Initialize loot table
+			$this->loot_table = array(BrassKnuckles::ID=>5000, WoodenSword::ID=>5000, FrogSkin::ID=>5000);
 		}
 		function get_id(){
 			return GiantFrog::ID;
@@ -80,10 +98,6 @@
 		}
 		function get_crit(){
 			return 2;
-		}
-		//returns array
-		function get_loots(){
-
 		}
 	}
 	class FlyingCabbage extends Monster{

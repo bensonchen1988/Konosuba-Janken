@@ -1,10 +1,16 @@
 <?php
 
+require_once("equipment.php");
+
 	class Player{
 
 		private $current_level;
 		private $current_exp;
 		private $current_hp;
+
+		private $equipped_weapon;
+		private $equipped_armor;
+		private $equipped_accessory;
 
 		private $inventory = array();
 
@@ -12,12 +18,62 @@
 			$this->current_level = 1;
 			$this->current_exp = 0;
 			$this->current_hp = $this->get_hp();
+			$unequipped = new Unequipped();
+			$this->equipped_weapon = $unequipped;
+			$this->equipped_armor = $unequipped;
+			$this->equipped_accessory = $unequipped;
 			
+		}
+
+		function has_weapon(){
+			if($this->equipped_weapon->get_id() > 0){
+				return True;
+			}
+			return False;
+		}
+
+		function has_armor(){
+			if($this->equipped_armor->get_id() > 0){
+				return True;
+			}
+			return False;
+		}
+
+		function has_accessory(){
+			if($this->equipped_accessory->get_id() > 0){
+				return True;
+			}
+			return False;
+		}
+
+		function set_weapon($equipment){
+			// MAYBE DO EQUIPMENT TYPE CHECK HERE
+			$this->equipped_weapon= $equipment;
+		}
+		function set_armor($equipment){
+			$this->equipped_armor = $equipment;
+		}
+		function set_accessory($equipment){
+			$this->equipped_accessory = $equipment;
+		}
+
+		function get_weapon(){
+			return $this->equipped_weapon;
+		}
+		function get_armor(){
+			return $this->equipped_armor;
+		}
+		function get_accessory(){
+			return $this->equipped_accessory;
 		}
 
 		function add_inventory($equipment_id){
 			array_push($this->inventory, $equipment_id);
 			$this->inventory = array_unique($this->inventory);
+		}
+
+		function set_inventory($inventory_array){
+			$this->inventory = $inventory_array;
 		}
 
 		function get_inventory(){

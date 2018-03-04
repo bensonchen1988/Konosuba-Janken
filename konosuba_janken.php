@@ -1,40 +1,18 @@
 <?php
     require_once("game_logic.php");
-    require_once("characters.php");
+    require_once("player.php");
     require_once("monsters.php");
+    require_once("equipment.php");
     $GameLogic = new GameLogic();
     $MonsterFactory = new MonsterFactory();
-
+    $EquipmentFactory = new EquipmentFactory();
+    $cookie_expiration_in_seconds = 86400*30;
     ob_start();
 ?>
 
 
 <!DOCTYPE>  
 <html>  
-<!-- CSS help for some terrible styling! -->
-<style>
-.center {
-    margin: auto;
-    width: 20%;
-    padding: 5px;
-}
-.center_player {
-    margin: auto;
-    width: 72%;
-    padding: 5px;
-}
-.center_monster {
-    margin: auto;
-    width: 38%;
-    padding: 5px;
-}
-.right {
-    position: absolute;
-    right: 0px;
-    width: 300px;
-    padding: 5px;
-}
-</style>
 </head>
 <body>  
 <h1> Konosuba Rock Paper Scissors! </h1>
@@ -55,48 +33,48 @@
 </script>
 
 <audio id="explosion">
-    <source src="/sounds/explosion.ogg" type="audio/ogg">
-    <source src="/sounds/explosion.mp3" type="audio/mpeg">
+    <source src="sounds/explosion.ogg" type="audio/ogg">
+    <source src="sounds/explosion.mp3" type="audio/mpeg">
 </audio>
 <audio id="explosion2">
-    <source src="/sounds/explosion2.ogg" type="audio/ogg">
-    <source src="/sounds/explosion2.mp3" type="audio/mpeg">
+    <source src="sounds/explosion2.ogg" type="audio/ogg">
+    <source src="sounds/explosion2.mp3" type="audio/mpeg">
 </audio>
 <audio id="lalala">
-    <source src="/sounds/lalala.ogg" type="audio/ogg">
-    <source src="/sounds/lalala.mp3" type="audio/mpeg">
+    <source src="sounds/lalala.ogg" type="audio/ogg">
+    <source src="sounds/lalala.mp3" type="audio/mpeg">
 </audio>
 <audio id="losion">
-    <source src="/sounds/losion.ogg" type="audio/ogg">
-    <source src="/sounds/losion.mp3" type="audio/mpeg">
+    <source src="sounds/losion.ogg" type="audio/ogg">
+    <source src="sounds/losion.mp3" type="audio/mpeg">
 </audio>
 <audio id="n">
-    <source src="/sounds/n.ogg" type="audio/ogg">
-    <source src="/sounds/n.mp3" type="audio/mpeg">
+    <source src="sounds/n.ogg" type="audio/ogg">
+    <source src="sounds/n.mp3" type="audio/mpeg">
 </audio>
 <audio id="n2">
-    <source src="/sounds/n2.ogg" type="audio/ogg">
-    <source src="/sounds/n2.mp3" type="audio/mpeg">
+    <source src="sounds/n2.ogg" type="audio/ogg">
+    <source src="sounds/n2.mp3" type="audio/mpeg">
 </audio>
 <audio id="plosion">
-    <source src="/sounds/plosion.ogg" type="audio/ogg">
-    <source src="/sounds/plosion.mp3" type="audio/mpeg">
+    <source src="sounds/plosion.ogg" type="audio/ogg">
+    <source src="sounds/plosion.mp3" type="audio/mpeg">
 </audio>
 <audio id="sion">
-    <source src="/sounds/sion.ogg" type="audio/ogg">
-    <source src="/sounds/sion.mp3" type="audio/mpeg">
+    <source src="sounds/sion.ogg" type="audio/ogg">
+    <source src="sounds/sion.mp3" type="audio/mpeg">
 </audio>
 <audio id="sion2">
-    <source src="/sounds/sion2.ogg" type="audio/ogg">
-    <source src="/sounds/sion2.mp3" type="audio/mpeg">
+    <source src="sounds/sion2.ogg" type="audio/ogg">
+    <source src="sounds/sion2.mp3" type="audio/mpeg">
 </audio>
 <audio id="thinking">
-    <source src="/sounds/thinking.ogg" type="audio/ogg">
-    <source src="/sounds/thinking.mp3" type="audio/mpeg">
+    <source src="sounds/thinking.ogg" type="audio/ogg">
+    <source src="sounds/thinking.mp3" type="audio/mpeg">
 </audio>
 <audio id="truepower">
-    <source src="/sounds/truepower.ogg" type="audio/ogg">
-    <source src="/sounds/truepower.mp3" type="audio/mpeg">
+    <source src="sounds/truepower.ogg" type="audio/ogg">
+    <source src="sounds/truepower.mp3" type="audio/mpeg">
 </audio>
 
 <form action="konosuba_janken.php" method="post">
@@ -117,7 +95,7 @@
 </form>
 <?php
     // meta data about game progress
-    $cookie_name = "konosuba_janken";
+    $cookie_name = "meta_data_cookie";
 
     $player_lose_streak_key = "ulsk";
     $player_stored_nukes_key = "usnk";
@@ -156,13 +134,16 @@
 
 <?php
     $cookie_name_stats = "stats_cookie";
+    $cookie_name_inventory = "inventory_cookie";
 
     $player_level_key = "plk";
     $player_current_hp_key = "pchk";
     $monster_current_hp_key = "mchk";
     $monster_id_key = "midk";
     $player_exp_key = "pek";
-
+    $player_weapon_key = "pwk";
+    $player_armor_key = "pak";
+    $player_accessory_key = "pacck";
 
     $PlayerCharacter = new Player();
     $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
@@ -171,10 +152,50 @@
         $PlayerCharacter->set_level($cook_stats[$player_level_key]);
         $PlayerCharacter->set_exp($cook_stats[$player_exp_key]);
         $PlayerCharacter->set_current_hp($cook_stats[$player_current_hp_key]);
+        $PlayerCharacter->set_weapon($EquipmentFactory->get_equipment($cook_stats[$player_weapon_key]));
+        $PlayerCharacter->set_armor($EquipmentFactory->get_equipment($cook_stats[$player_armor_key]));
+        $PlayerCharacter->set_accessory($EquipmentFactory->get_equipment($cook_stats[$player_accessory_key]));
         $Monster = $MonsterFactory->create_monster_by_id($cook_stats[$monster_id_key]);
         $Monster->set_current_hp($cook_stats[$monster_current_hp_key]);
-        // DO PLAYER LEVEL UP AND MONSTER CHANGE AT LAST STEP BEFORE COOKIE SAVE
+        
     }
+
+    if(isset($_POST["weapon_select"])){
+        $equipment = $EquipmentFactory->get_equipment($_POST["weapon_select"]);
+        $old_equipment = $PlayerCharacter->get_weapon();
+        $PlayerCharacter->set_weapon($equipment);
+        equipment_status_output($old_equipment, $equipment);
+    }
+    if(isset($_POST["armor_select"])){
+        $equipment = $EquipmentFactory->get_equipment($_POST["armor_select"]);
+        $old_equipment = $PlayerCharacter->get_armor();
+        $PlayerCharacter->set_armor($equipment);
+        equipment_status_output($old_equipment, $equipment);
+    }
+    if(isset($_POST["accessory_select"])){
+        $equipment = $EquipmentFactory->get_equipment($_POST["accessory_select"]);
+        $old_equipment = $PlayerCharacter->get_accessory();
+        $PlayerCharacter->set_accessory($equipment);
+        equipment_status_output($old_equipment, $equipment);
+    }
+
+    function equipment_status_output($old_equipment, $equipment){
+        if($old_equipment->get_id() !== $equipment->get_id()){
+            if($equipment->get_id() === Unequipped::ID){
+                echo "You've removed " . $old_equipment->get_name() . "!<br>";
+            }
+            else{
+                echo "You've equipped " . $equipment->get_name() . "!<br>";
+            }
+        }
+    }
+
+
+    if(isset($_COOKIE[$cookie_name_inventory])){
+        $inventory = unserialize($_COOKIE[$cookie_name_inventory]);
+        $PlayerCharacter->set_inventory($inventory);
+    }
+
 
     if(isset($_POST["monster_select"])){
         echo "Changed Monster!<br>";
@@ -200,23 +221,24 @@
 
 <?php  
     $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
+    
     $computer_choice = rand(0, 2);
-    if($cpu_stored_nukes > 0){
-        $computer_choice = rand(0, 3);
-    }
-    $computer_choice_display = $choices[$computer_choice];
 
     if($player_input === -1){
         $player_input_display = "Please make a choice!";
     }
     else{
     	$player_input_display = $choices[$player_input];
+        echo "Your choice: $player_input_display<br>";
+        if($cpu_stored_nukes > 0){
+            $computer_choice = rand(0, 3);
+        }
+        $computer_choice_display = $choices[$computer_choice];
+        echo $Monster->get_name() ."'s choice: $computer_choice_display";
     }
-    echo "Your choice: $player_input_display<br>";
-    echo "Computer's choice: $computer_choice_display";
     echo "<br>";
 
-    $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins);
+    $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster->get_name());
 
     if($result === "p"){
         // If player wins, do damage to monster
@@ -230,6 +252,15 @@
             $PlayerCharacter->gain_exp($exp_awarded);
             // HP regen award for killing monster
             $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($Monster));
+            // Loot Check
+            if(sizeof($Monster->get_loots()) > 0){
+                foreach($Monster->get_loots() as $id){
+                    $PlayerCharacter->add_inventory($id);
+                    $equipment = $EquipmentFactory->get_equipment($id);
+                    echo "<br>";
+                    echo "You got a " . $equipment->get_name() . "!";
+                }
+            }
             // Change monster
             $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
         }
@@ -255,6 +286,7 @@
     }
 
 ?>  
+    <br>
 <?php
     $thecookie = array();
     $thecookie[$player_lose_streak_key] = $player_lose_streak;
@@ -264,7 +296,7 @@
     $thecookie[$cpu_stored_nukes_key] = $cpu_stored_nukes;
     $thecookie[$cpu_wins_key] = $cpu_wins;
 
-    setcookie($cookie_name, serialize($thecookie), time()+86400, "/");
+    setcookie($cookie_name, serialize($thecookie), time()+$cookie_expiration_in_seconds, "/");
 ?>
 
 <?php
@@ -275,34 +307,38 @@
     $thecookie_stats[$monster_current_hp_key] = $Monster->get_current_hp();
     $thecookie_stats[$monster_id_key] = $Monster->get_id();
     $thecookie_stats[$player_exp_key] = $PlayerCharacter->get_exp();
+    $thecookie_stats[$player_weapon_key] = $PlayerCharacter->get_weapon()->get_id();
+    $thecookie_stats[$player_armor_key] = $PlayerCharacter->get_armor()->get_id();
+    $thecookie_stats[$player_accessory_key] = $PlayerCharacter->get_accessory()->get_id();
 
-    setcookie($cookie_name_stats, serialize($thecookie_stats), time()+86400, "/");
+    setcookie($cookie_name_stats, serialize($thecookie_stats), time()+$cookie_expiration_in_seconds, "/");
 
 ?>
 
+<?php
+    $thecookie_inventory = $PlayerCharacter->get_inventory();
+    setcookie($cookie_name_inventory, serialize($thecookie_inventory), time()+$cookie_expiration_in_seconds, "/");
+?>
 
-<div class = "center_monster">
-    <img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400">
-    <br>
-    <?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
-    <br>
-    HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>,  ATK: <?php echo $Monster->get_atk(); ?>, DEF: <?php echo $Monster->get_def(); ?>, CRIT: <?php echo $Monster->get_crit(); ?>
-</div>
+<img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400">
+<br>
+<?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
+<br>
+HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>,  ATK: <?php echo $Monster->get_atk(); ?>, DEF: <?php echo $Monster->get_def(); ?>, CRIT: <?php echo $Monster->get_crit(); ?>
+<br>
 
-
-<div class = "center_player">
 <table>
-    <form action="konosuba_janken.php" method="POST">
+    <form action="konosuba_janken.php" method="POST" id = "rock">
         <input type="hidden" name="player_input" value="0">
         <input type="image" src="images/rock.jpg" height="200" width="200">
     </form>
 
     <form action="konosuba_janken.php" method="POST">
-        <input type="hidden" name="player_input" value="1">
+        <input type="hidden" name="player_input" value="1" id = "paper">
         <input type="image" src="images/paper.jpg" height="200" width="200">
     </form>
 
-    <form action="konosuba_janken.php" method="POST">
+    <form action="konosuba_janken.php" method="POST" id = "scissors">
         <input type="hidden" name="player_input" value="2">
         <input type="image" src="images/scissors.jpg" height="200" width="200">
     </form>
@@ -323,23 +359,103 @@
            // echo "</div>";
          }
        //  echo "<br>";
-         ob_end_flush();
     ?>
 
+    <!-- 1. Iterate through inventory and call EquipmentFactory->get_equipment($id) on them all -->
+    <!-- 2. While iterating and creating, maintain 3 arrays for Weapons, Armors, and Accessories -->
+    <!-- 3. Generate output list for each category -->
+
+    <?php
+        $weapons_array = array();
+        $armors_array = array();
+        $accessories_array = array();
+        foreach($PlayerCharacter->get_inventory() as $id){
+            $item = $EquipmentFactory->get_equipment($id);
+            if($item->get_equipment_type() === Equipment::WEAPON){
+                array_push($weapons_array, $item);
+            }
+            else if($item->get_equipment_type() === Equipment::ARMOR){
+                array_push($armors_array, $item);
+            }
+            else{
+                array_push($accessories_array, $item);
+            }
+        }
+    ?>
+
+    <br>
+
+    <?php
+        function equipment_list_printer($equipment, $player_equipment){
+            echo "<option ";
+            if($equipment->get_id() == $player_equipment->get_id()){
+                echo "selected ";
+            }
+            echo "value = " . $equipment->get_id() . ">" . $equipment->get_name() . " - " . $equipment->get_stats_string() . "</option>";
+        }
+    ?>
+
+    <form action="konosuba_janken.php" method="post">
+    <select id="weapon_select" name="weapon_select"> 
+        <option value = -1>--Choose Weapon--</option>
+        <?php
+            foreach($weapons_array as $weapon){
+                equipment_list_printer($weapon, $PlayerCharacter->get_weapon());
+            }
+        ?>
+    </select>
+    <select id="armor_select" name="armor_select"> 
+        <option value = -1>--Choose Armor--</option>
+        <?php
+            foreach($armors_array as $armor){
+                equipment_list_printer($armor, $PlayerCharacter->get_armor());
+            }
+        ?>
+    </select>
+    <select id="accessory_select" name="accessory_select"> 
+        <option value = -1>--Choose Accessory--</option>
+        <?php
+            foreach($accessories_array as $accessory){
+                equipment_list_printer($accessory, $PlayerCharacter->get_accessory());
+            }
+        ?>
+    </select>
+    <input type="submit" value="Change Equipments">
+    </form>
+
 </table>
-    You: Level <?php echo $PlayerCharacter->get_level(); ?>
-    <br>
-    HP: <?php echo $PlayerCharacter->get_current_hp(); ?> / <?php echo $PlayerCharacter->get_hp() ?>,  ATK: <?php echo $PlayerCharacter->get_atk(); ?>, DEF: <?php echo $PlayerCharacter->get_def(); ?>, CRIT: <?php echo $PlayerCharacter->get_crit(); ?>
-    <br>
-    EXP: <?php echo $PlayerCharacter->get_exp(); ?> / <?php echo $PlayerCharacter->get_required_exp() ?>
-</div>
 
+    <?php
+        echo "You: Level " . $PlayerCharacter->get_level();
+        echo "<br>";
+        echo "HP: " . $PlayerCharacter->get_current_hp() . "/" . $PlayerCharacter->get_hp();
+        echo ", ";
+        echo "ATK: " . $PlayerCharacter->get_atk();
+        if ($PlayerCharacter->has_weapon()){
+            echo "+". $PlayerCharacter->get_weapon()->get_atk();
+        }
+        echo ", ";
+        echo "DEF: " . $PlayerCharacter->get_def();
+        if ($PlayerCharacter->has_armor()){
+            echo "+". $PlayerCharacter->get_armor()->get_def();
+        }
+        echo ", ";
+        echo "CRIT: " . $PlayerCharacter->get_crit();
+        echo "<br>";
+        echo "EXP: " . $PlayerCharacter->get_exp() . "/" . $PlayerCharacter->get_required_exp();
+        echo "<br>";
+    ?>
 
+<br>
 <br> Your lose streak: <?php echo $player_lose_streak ?>
 <br> Your Explosions available: <?php echo $player_stored_nukes ?>
 <br> Your total wins: <?php echo $player_wins ?>
 <br> Computer's lose streak: <?php echo $cpu_lose_streak ?>
 <br> Computer's Explosions available: <?php echo $cpu_stored_nukes ?>
 <br> Computer's total wins: <?php echo $cpu_wins ?>
+
+<?php 
+    ob_end_flush();
+?>
 </body>  
 </html>  
