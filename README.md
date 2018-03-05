@@ -24,12 +24,18 @@ HP - How much damage you can take before you die.
 DEF - Directly mitigates damage in the form of enemyATK - yourDEF, to a minimum of 1 damage.   
 CRIT - % chance of dealing DEF ignoring double damage.
 
-Upon defeating enemies, players now recover a small amount of HP equal to a fraction of the defeated enemy's max HP.
+Upon defeating enemies, players recover a small amount of HP equal to a fraction of the defeated enemy's max HP.
 
-Current max level - 99
+Monsters may drop equipments upon being defeated. 
+Equipments are separated into three types: Weapons, Armors, and Accessories.
+Currently, Weapons and Armors only provide straight stat boosts.
+Accessories can provide stat boosts, and also special effects such as "1.5X base attack when winning with Rock".
+
+Current player max level - 99
 
 Future features:  
 
 -Randomize encounters to be within a range of player level  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
--Equipment drops from defeating monsters. Equipment may simply grant stats, or special effects such as "winning with Rocks lets you deal double damage"
+-Auto battle and farming mode
+-Single use items
