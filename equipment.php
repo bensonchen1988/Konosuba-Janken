@@ -22,6 +22,7 @@ class EquipmentFactory{
 			// Accessories
 			case LuckyPebbles::ID: return new LuckyPebbles();
 			case RockAmulet::ID: return new RockAmulet();
+			case CoronatiteCore::ID: return new CoronatiteCore();
 			case SoDamageMuchWowSuchOP::ID: return new SoDamageMuchWowSuchOP();
 			case TrueSoDamageMuchWowSuchOP::ID: return new TrueSoDamageMuchWowSuchOP();
 			default: return new Unequipped();

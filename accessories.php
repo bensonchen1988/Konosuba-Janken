@@ -57,12 +57,32 @@ class RockAmulet extends Accessory{
 		return "Rock Amulet";
 	}
 }
+class CoronatiteCore extends Accessory{
+
+	const ID = 300003;
+
+	function __construct(){
+		array_push($this->stats_effect, new StatsBoost(0, 50, 50));
+	}
+
+	function get_id(){
+		return CoronatiteCore::ID;
+	}
+
+	function get_stats_string(){
+		return "DEF+50, CRIT+50";
+	}
+
+	function get_name(){
+		return "Coronatite Core";
+	}
+}
 
 class SoDamageMuchWowSuchOP extends Accessory{
 	const ID = 999999;
 
 	function __construct(){
-		array_push($this->stats_effect, new RockBoost(2), new PaperBoost(2), new ScissorsBoost(2), new StatsBoost(50, 50, 50), new ExplosionBoost(2));
+		array_push($this->stats_effect, new RockBoost(2), new PaperBoost(2), new ScissorsBoost(2), new StatsBoost(50, 25, 50), new ExplosionBoost(2));
 	}
 
 	function get_id(){
@@ -70,7 +90,7 @@ class SoDamageMuchWowSuchOP extends Accessory{
 	}
 
 	function get_stats_string(){
-		return "2X Base Atk, ATK+50, DEF+50, CRIT+50";
+		return "2X Base Atk, ATK+50, DEF+25, CRIT+50";
 	}
 
 	function get_name(){
@@ -82,7 +102,7 @@ class TrueSoDamageMuchWowSuchOP extends Accessory{
 	const ID = 666666;
 
 	function __construct(){
-		array_push($this->stats_effect, new RockBoost(5), new PaperBoost(5), new ScissorsBoost(5), new StatsBoost(250, 250, 250), new ExplosionBoost(5));
+		array_push($this->stats_effect, new RockBoost(5), new PaperBoost(5), new ScissorsBoost(5), new StatsBoost(250, 50, 100), new ExplosionBoost(5));
 	}
 
 	function get_id(){
@@ -90,7 +110,7 @@ class TrueSoDamageMuchWowSuchOP extends Accessory{
 	}
 
 	function get_stats_string(){
-		return "5X Base Atk, ATK+250, DEF+250, CRIT+250";
+		return "5X Base Atk, ATK+250, DEF+50, CRIT+100";
 	}
 
 	function get_name(){

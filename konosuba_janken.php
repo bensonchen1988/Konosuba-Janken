@@ -337,7 +337,7 @@
     setcookie($cookie_name_inventory, serialize($thecookie_inventory), time()+$cookie_expiration_in_seconds, "/");
 ?>
 
-<img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400">
+<img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
 <br>
 <?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
 <br>

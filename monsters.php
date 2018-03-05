@@ -45,11 +45,14 @@ require_once("accessories.php");
 			return rand(0, 2);
 		}
 
+		function get_description(){
+			return "Default description";
+		}
+
 	}
 
 	class MonsterFactory{
 
-		// can be further expanded to accomodate level buckets
 		function create_monster_by_player_level($player_level){
 			switch($player_level){
 				case 1: return new GiantFrog();
@@ -57,8 +60,8 @@ require_once("accessories.php");
 				case 3: return new DullahansUndeads();
 				case 4: return new Dullahan();
 				case 5: return new Destroyer();
-				case 6: return new Hanz();
-				default: return new Hanz(); //Catch all for overleveled players
+				case 6: $arr = array(new Hanz(), new WinterGeneral()); return $arr[array_rand($arr)];
+				default: $arr = array(new Hanz(), new WinterGeneral()); return $arr[array_rand($arr)]; //Catch all for overleveled players for now
 			}
 		}
 
@@ -70,7 +73,8 @@ require_once("accessories.php");
 				case Dullahan::ID: return new Dullahan();
 				case Destroyer::ID: return new Destroyer();
 				case Hanz::ID: return new Hanz();
-				case TrainingDummy::ID: return new TrainingDummy();
+				case Hanz::ID: return new Hanz();
+				case WinterGeneral::ID: return new WinterGeneral();
 				default: throw new Exception("Invalid monster ID");
 			}
 		}
@@ -114,13 +118,13 @@ require_once("accessories.php");
 			// 80% Paper, 10% Rock, 10% Scissors
 			// 70% Paper, 10% Rock, 10% Scissors, 10% Explosion
 			$rock = 10;
-			$paper = 90;
-			$scissors = 100;
+			$paper = $rock + 80;
+			$scissors = $paper+10;
 			$explosion = 0;
 			if($has_nuke){
-				$explosion = 100;
-				$scissors = 90;
-				$paper = 80;
+				$paper = $rock + 70;
+				$scissors = $paper+10;
+				$explosion = $scissors + 10;
 			}
 
 			$roll = rand(1,100);
@@ -136,6 +140,10 @@ require_once("accessories.php");
 			if($roll > $scissors and $roll <= $explosion){
 				return 3;
 			}
+		}
+
+		function get_description(){
+			return "A Giant Frog. Known to hibernate underground during the winter, and feeds on farm livestocks when active. Apparently its legs are very delicious when fried! Its skin is soft like Paper...";
 		}
 	}
 	class FlyingCabbage extends Monster{
@@ -169,6 +177,12 @@ require_once("accessories.php");
 		function get_crit(){
 			return 3;
 		}
+		function get_choice($has_nuke){
+			return 0;
+		}
+		function get_description(){
+			return "A Flying... Cabbage!? They roam around to be harvested when ripe, hoping to avoid the horrible fate of rotting away worthlessly instead of being deliciously consumed by humans. It can't seem to do anything other than ram itself at you.";
+		}
 	}
 	class DullahansUndeads extends Monster{
 
@@ -201,6 +215,9 @@ require_once("accessories.php");
 		function get_crit(){
 			return 4;
 		}
+		function get_description(){
+			return "Summoned minions of Dullahan, these undeads only wish to be salvated.";
+		}
 	}
 	class Dullahan extends Monster{
 
@@ -232,12 +249,44 @@ require_once("accessories.php");
 		function get_crit(){
 			return 5;
 		}
+		function get_description(){
+			return "A leader in the Demon Lord's Army, Dullahan possesses incredible swordsmanship. The way he swings his sword around reminds one of very sharp Scissors...";
+		}
+		function get_choice($has_nuke){
+			// Normal rates: Rock 20%, Paper 10%, Scissors 70%
+			// Always uses Explosion when possible
+			$rock = 20;
+			$paper = $rock + 10;
+			$scissors = $paper + 70;
+			$explosion = 0;
+			if($has_nuke){
+				$explosion = 100;
+				$scissors = 0;
+				$paper = 0;
+				$rock = 0;
+			}
+
+			$roll = rand(1,100);
+			if($roll >= 1 and $roll <= $rock){
+				return 0;
+			}
+			if($roll > $rock and $roll <= $paper){
+				return 1;
+			}
+			if($roll > $paper and $roll <= $scissors){
+				return 2;
+			}
+			if($roll > $scissors and $roll <= $explosion){
+				return 3;
+			}
+		}
 	}
 	class Destroyer extends Monster{
 
 		const ID = 105;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
+			$this->loot_table = array(CoronatiteCore::ID=>10000);
 		}
 		function get_id(){
 			return Destroyer::ID;
@@ -246,7 +295,7 @@ require_once("accessories.php");
 			return 5;
 		}
 		function get_name(){
-			return "Destroyer";
+			return "Moving Fortress Destroyer";
 		}
 		function get_atk(){
 			return 10;
@@ -263,13 +312,16 @@ require_once("accessories.php");
 		function get_crit(){
 			return 6;
 		}
+		function get_description(){
+			return "A destructive weapon which destroyed the city that created it, the Moving Fortress Destroyer wrecks havoc upon anything in its path.";
+		}
 	}
 	class Hanz extends Monster{
 
 		const ID = 106;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
-			$this->loot_table = array(SoDamageMuchWowSuchOP::ID=>10000, TrueSoDamageMuchWowSuchOP::ID=>1000);
+			$this->loot_table = array(SoDamageMuchWowSuchOP::ID=>8000, TrueSoDamageMuchWowSuchOP::ID=>1000);
 		}
 		function get_id(){
 			return Hanz::ID;
@@ -284,16 +336,54 @@ require_once("accessories.php");
 			return 55;
 		}
 		function get_def(){
-			return 20;
+			return 50;
 		}
 		function get_hp(){
 			return 260;
 		}
 		function get_exp(){
-			return 20;
+			return 40;
 		}
 		function get_crit(){
 			return 10;
+		}
+		function get_description(){
+			return "A leader of the Demon Lord's Army, Hanz is an extremely dangerous Deadly Poison Slime, capable of corroding and dissolving almost anything he touches.";
+		}
+	}
+
+	class WinterGeneral extends Monster{
+		const ID = 107;
+		function __construct(){
+			$this->current_hp = $this->get_hp();
+			$this->loot_table = array(TrueSoDamageMuchWowSuchOP::ID=>1000);
+		}
+		function get_id(){
+			return WinterGeneral::ID;
+		}
+		function get_level(){
+			return 6;
+		}
+		function get_name(){
+			return "Winter General";
+		}
+		function get_atk(){
+			return 75;
+		}
+		function get_def(){
+			return 40;
+		}
+		function get_hp(){
+			return 160;
+		}
+		function get_exp(){
+			return 35;
+		}
+		function get_crit(){
+			return 20;
+		}
+		function get_description(){
+			return "The personification of the harsh winter cold.";
 		}
 	}
 
