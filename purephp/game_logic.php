@@ -6,52 +6,49 @@ require_once("accessory_effects.php");
 
     class GameLogic
     {
+        // Lose streak threshold to receive an Explosion charge
         private $lose_streak_to_get_explosion = 3;
 
-        private $monster_exp_table = array(1, 2, 3, 4, 5, 6);
-        private $monster_names_table = array("Giant Frog", "Flying Cabbage", "Dullahan's Undeads", "Dullahan", "Destroyer", "Hanz");
-        private $monster_stats_table = array();
-
-        private $player_level_to_monster_mapping_table = array(1, 2, 3, 4, 5, 6);
-        // monster name = "monster"+lvl
-
-        private $const_atk = "ATK";
-        private $const_def = "DEF";
-        private $const_hp = "HP";
-        private $const_crit = "CRIT";
-
-
+        /**
+        * Returns the percentage in decimal form of EXP loss upon dying
+        **/
         function get_exp_penalty_rate()
         {
             return 0.2;
         }
 
-
+        /**
+        * Function to be called when the Player wins the RPS. Calculates the damage done to the Monster.
+        **/
         function calculate_damage_on_monster(Player $PlayerCharacter, Monster $Monster)
         {
-            // Crit proc
-            $crit_roll = rand(1,100);
+            // Initialize helper class for easy value manipulation
             $attacker = new CombatData();
             $defender = new CombatData();
             $attacker->base_atk = $PlayerCharacter->get_atk();
+            $attacker->crit = $PlayerCharacter->get_crit();
             $attacker->input = $PlayerCharacter->get_input();
+            // Apply weapon bonus (if any)
             if($PlayerCharacter->has_weapon()){
                 $attacker->bonus_atk += $PlayerCharacter->get_weapon()->get_atk();
             }
-            $attacker->crit = $PlayerCharacter->get_crit();
 
             $defender->def = $Monster->get_def();
 
+            // Apply accessory bonus (if any)
             if($PlayerCharacter->has_accessory()){
                 $this->apply_effects($PlayerCharacter->get_accessory()->get_effects(), $attacker);
             }
 
+            // Calculate crit. Crits do a default of 2X total damage at the moment, considering expanding to allow Accessories to modify this multiplier
+            $crit_roll = rand(1,100);
             if($crit_roll <= $attacker->crit){
                 $attacker->base_atk = $attacker->base_atk * 2;
                 $attacker->bonus_atk = $attacker->bonus_atk * 2;
                 $defender->def = 0;
                 $GLOBALS["console_output_buffer"] .= "\nCRITICAL STRIKE!";
             }
+            // Deals a minimum of 1 damage
             $damage = max(1, $attacker->get_total_atk() - $defender->def);
             $GLOBALS["console_output_buffer"] .= " You did " . $damage ." damage!";
             return $damage;
@@ -60,11 +57,10 @@ require_once("accessory_effects.php");
 
         function calculate_damage_on_player(Monster $Monster, Player $PlayerCharacter)
         {
+            // Special monsters like Training Dummy doesn't attack
             if($Monster->get_atk() == 0){
                 return 0;
             }
-            // Crit proc
-            $crit_roll = rand(1,100);
             $attacker = new CombatData();
             $defender = new CombatData();
             $attacker->base_atk = $Monster->get_atk();
@@ -78,6 +74,8 @@ require_once("accessory_effects.php");
                 $this->apply_effects($PlayerCharacter->get_accessory()->get_effects(), $defender);
             }
 
+            // Crit proc
+            $crit_roll = rand(1,100);
             if($crit_roll <= $attacker->crit){
                 $attacker->base_atk = $attacker->base_atk * 2;
                 $attacker->bonus_atk = $attacker->bonus_atk * 2;
@@ -90,39 +88,55 @@ require_once("accessory_effects.php");
 
         }
 
+        /**
+        * Gets the winner of the RPS game.
+        * Rock beats Scissors, Paper beats Rock, and Scissors beats Paper.
+        * Explosions beats everything except for another Explosion, which ends in a tie.
+        * Considering changing function signature
+        **/
         function get_winner(int $computer_choice, int $player_input, array $choices, int &$player_stored_nukes, 
         	int &$player_lose_streak, int &$player_wins, int &$cpu_stored_nukes, 
         	int &$cpu_lose_streak, int &$cpu_wins, string $monster_name){
-            if($player_input == 3){
+            // Decrease player's stored nuke's count if player chose to use Explosion
+            if($player_input === 3){
                 --$player_stored_nukes;
             }
-            if($computer_choice == 3){
+            // Decrease monster's stored nuke's count if monster chose to use Explosion
+            if($computer_choice === 3){
                 --$cpu_stored_nukes;
             }
+            // Should never get to this 
             if($player_input == -1){
                 return "e";
             }
-            if($computer_choice == $player_input){
+            // Tie Game
+            if($computer_choice === $player_input){
                 $GLOBALS["console_output_buffer"] .= "DRAW GAME!";
                 return "d";
             }
+            // Explosion win check
             if($player_input == 3 || $computer_choice == 3){
                 if($player_input == 3){
                     $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $monster_name);
                     return "p";
-                }else{
-                    $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $monster_name, "You");
                 }
+                $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $monster_name, "You");
                 return "c";
             }
+            // Normal win check
             if(($player_input+1)%3 == $computer_choice){
                 $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $monster_name, "You");
                 return "c";
             }
-            $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $monster_name);
-            return "p";
+            else{
+                $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $monster_name);
+                return "p";
+            }
         }
 
+        /**
+        * Updates meta data post RPS game.
+        **/
         private function process_win(int &$winner_wins, int &$winner_lose_streak, int &$loser_lose_streak, 
         	int &$loser_stored_nukes, string $winner_name, string $loser_name){
             $GLOBALS["console_output_buffer"] .= "$winner_name Win!";
@@ -136,11 +150,17 @@ require_once("accessory_effects.php");
             ++$winner_wins;
         }
 
+        /**
+        * Returns the HP regen amount (20% of Monster's Max HP) to be awarded when the monster dies
+        **/
         function get_kill_hp_regen(Monster $Monster)
         {
             return floor(0.2 * $Monster->get_hp());
         }
 
+        /**
+        * Applies accessory effects
+        **/
         private function apply_effects(array $AccessoryEffects_array, CombatData $CombatData)
         {
             foreach($AccessoryEffects_array as $AccessoryEffects){
@@ -155,6 +175,9 @@ require_once("accessory_effects.php");
             }
         }
 
+        /**
+        * Helper function for apply_effects; applies simple effects to ATK, DEF, and CRIT
+        **/ 
         private function apply_stat_effects(IEffectsStats $AccessoryEffects, CombatData $CombatData)
         {
             $CombatData->bonus_atk += $AccessoryEffects->get_atk_boost();
@@ -162,6 +185,9 @@ require_once("accessory_effects.php");
             $CombatData->crit += $AccessoryEffects->get_crit_boost();
         }
 
+        /**
+        * Helper function for apply_effects; applies special effects to combat
+        **/ 
         private function apply_type_effects(IEffectsAttackType $AccessoryEffects, CombatData $CombatData)
         {
             switch($AccessoryEffects->get_type()){
@@ -175,7 +201,9 @@ require_once("accessory_effects.php");
 
     }
 
-
+    /**
+    * Helper class to memo combat status across scope
+    **/
     class CombatData
     {
         public $base_atk = 0;

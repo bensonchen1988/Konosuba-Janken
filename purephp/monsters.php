@@ -61,6 +61,9 @@ require_once("accessories.php");
 
     class MonsterFactory
     {
+        /**
+        * Creates a Monster based on the provided player level. Basically matchmaking.
+        **/ 
         function create_monster_by_player_level($player_level)
         {
             switch($player_level){
@@ -74,6 +77,9 @@ require_once("accessories.php");
             }
         }
 
+        /**
+        * Creates a Monster based on the provided monster ID.
+        **/
         function create_monster_by_id($id)
         {
             switch($id){
@@ -89,6 +95,10 @@ require_once("accessories.php");
             }
         }
     }
+
+    /**************************************
+    * Monsters
+    **************************************/
 
     class GiantFrog extends Monster
     {

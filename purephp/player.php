@@ -8,11 +8,16 @@ require_once("equipment.php");
         private $current_exp;
         private $current_hp;
 
+        // Equipment instance
         private $equipped_weapon;
+        // Equipment instance
         private $equipped_armor;
+        // Equipment instance
         private $equipped_accessory;
+
         private $player_input = -1;
 
+        // Array of equipment IDs
         private $inventory = array();
 
         public function __construct()
@@ -61,6 +66,7 @@ require_once("equipment.php");
             return false;
         }
 
+        // Thinking of a way for stricter type hinting for the following 3 functions
         function set_weapon(Equipment $equipment)
         {
             $this->equipped_weapon= $equipment;
@@ -87,6 +93,10 @@ require_once("equipment.php");
             return $this->equipped_accessory;
         }
 
+        /**
+        * Adds a single equipment ID to the inventory
+        * Duplicates are purged (for now, might implement a combine feature in the future)
+        **/
         function add_inventory(int $equipment_id)
         {
             array_push($this->inventory, $equipment_id);
@@ -136,39 +146,37 @@ require_once("equipment.php");
 
         function get_required_exp()
         {
-            //return $this->exp_table[$current_level-1];
             return floor($this->current_level * 3 * 1.1 ** $this->current_level);
         }
 
         function get_atk()
         {
-            //return $this->player_stats_table[$current_level-1][$this->const_atk];
             return floor($this->current_level* (3 * 1.05 ** $this->current_level));
         }
 
         function get_hp()
         {
-            //return $this->player_stats_table[$current_level-1][$this->const_hp];
             return 15 + floor($this->current_level* (20 * 1.05 ** $this->current_level));
         }
 
         function get_def()
         {
-            //return $this->player_stats_table[$current_level-1][$this->const_def];
             return 1 + floor($this->current_level* (1 * 1.05 ** $this->current_level));
         }
 
         function get_crit()
         {
-            //return $this->player_stats_table[$current_level-1][$this->const_crit];
             return min(5 + floor(1.13 ** $this->current_level), 100);
         }
 
+        /**
+        * Gains exp and levels the player up. Multiple level ups at once is possible.
+        * HP is refilled completely upon leveling up.
+        **/
         function gain_exp(int $exp_awarded)
         {
             $this->set_exp($this->get_exp() + $exp_awarded);
             while($this->get_exp() >= $this->get_required_exp()){
-                //$player_exp = $player_exp - $current_level_exp_req;
                 $this->set_exp($this->get_exp() - $this->get_required_exp());
                 $this->set_level($this->get_level() + 1);
                 if($this->get_level() > $this->get_max_level()){
@@ -178,8 +186,9 @@ require_once("equipment.php");
             }
         }
 
-
-
+        /**
+        * Current level cap
+        **/
         function get_max_level()
         {
             return 99;

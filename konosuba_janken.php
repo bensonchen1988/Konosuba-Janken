@@ -1,12 +1,13 @@
 <?php
-    require_once("game_logic.php");
-    require_once("player.php");
-    require_once("monsters.php");
-    require_once("equipment.php");
+    require_once("purephp/game_logic.php");
+    require_once("purephp/player.php");
+    require_once("purephp/monsters.php");
+    require_once("purephp/equipment.php");
     $GameLogic = new GameLogic();
     $MonsterFactory = new MonsterFactory();
     $EquipmentFactory = new EquipmentFactory();
     $cookie_expiration_in_seconds = 86400*30;
+    // Buffer used for aggregating all event logs to output into a textarea at the end of the user to see
     $GLOBALS["console_output_buffer"] = "";
     ob_start();
 ?>
@@ -18,7 +19,8 @@
 <body>  
 <h1> Konosuba Rock Paper Scissors! </h1>
 
-<!-- javascript help for some sweet audio! -->
+<!-- Javascript help for some sweet audio! -->
+<!-- Plays an audio file selected at random from the list below when the user hovers their mouse over the Explosion image -->
 <script type="text/javascript">
     var currentMusic;
     var sounds_list = ["explosion","explosion2","lalala","losion","n","n2","plosion","sion","sion2","thinking","truepower"]
@@ -128,8 +130,8 @@
 ?>
 
 <?php
+    // player stats and equipment status, as well as current monster's hp and id
     $cookie_name_stats = "stats_cookie";
-    $cookie_name_inventory = "inventory_cookie";
 
     $player_level_key = "plk";
     $player_current_hp_key = "pchk";
@@ -140,8 +142,11 @@
     $player_armor_key = "pak";
     $player_accessory_key = "pacck";
 
+    // Default initialization
     $PlayerCharacter = new Player();
     $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
+
+    // If stats cookie is set, load the values into the PlayerChacter and Monster objects
     if(isset($_COOKIE[$cookie_name_stats])){
         $cook_stats = unserialize($_COOKIE[$cookie_name_stats]);
         $PlayerCharacter->set_level($cook_stats[$player_level_key]);
@@ -155,18 +160,21 @@
         
     }
 
+    // Update weapon equipment status
     if(isset($_POST["weapon_select"])){
         $equipment = $EquipmentFactory->get_equipment($_POST["weapon_select"]);
         $old_equipment = $PlayerCharacter->get_weapon();
         $PlayerCharacter->set_weapon($equipment);
         equipment_status_output($old_equipment, $equipment);
     }
+    // Update armor equipment status
     if(isset($_POST["armor_select"])){
         $equipment = $EquipmentFactory->get_equipment($_POST["armor_select"]);
         $old_equipment = $PlayerCharacter->get_armor();
         $PlayerCharacter->set_armor($equipment);
         equipment_status_output($old_equipment, $equipment);
     }
+    // Update accessory equipment status
     if(isset($_POST["accessory_select"])){
         $equipment = $EquipmentFactory->get_equipment($_POST["accessory_select"]);
         $old_equipment = $PlayerCharacter->get_accessory();
@@ -174,6 +182,9 @@
         equipment_status_output($old_equipment, $equipment);
     }
 
+    /**
+    *   Helper function to output equipment changing status. 
+    **/
     function equipment_status_output($old_equipment, $equipment)
     {
         if($old_equipment->get_id() !== $equipment->get_id()){
@@ -187,12 +198,14 @@
     }
 
 
+    // Load inventory
+    $cookie_name_inventory = "inventory_cookie";
     if(isset($_COOKIE[$cookie_name_inventory])){
         $inventory = unserialize($_COOKIE[$cookie_name_inventory]);
         $PlayerCharacter->set_inventory($inventory);
     }
 
-
+    // Process monster change request
     if(isset($_POST["monster_select"])){
         $GLOBALS["console_output_buffer"] .= "Changed Monster!\n";
         $Monster = $MonsterFactory->create_monster_by_id($_POST["monster_select"]);
@@ -201,6 +214,7 @@
         $cpu_stored_nukes = 0;
     }
 
+    // Process reset game request: Initializes game state back to default.
     if(isset($_POST["reset"])){
         $GLOBALS["console_output_buffer"] .= "Resetted game!\n"; 
         $PlayerCharacter = new Player();
@@ -217,91 +231,92 @@
 
 ?>
 
-<?php
+<?php  
+    /**********************************************************************************
+    * THIS SECTION IS THE HEART OF THE CARDS, ER, I MEAN GAME
+    **********************************************************************************/
+
+    // Default player input set to do nothing
     $player_input = -1;
     
     if(isset($_POST["player_input"])){
         $player_input = $_POST["player_input"];
         $PlayerCharacter->set_input($player_input);
     }
-?>
 
-
-
-<?php  
-    $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
+    // Proceed with the game and combat if a valid player input is received
+    if($player_input >= 0 && $player_input <= 3){
+        $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
+        // Generate Monster choice. Different monsters may have unique choice patterns.
+        $computer_choice = $Monster->get_choice($cpu_stored_nukes>0);
+        // Output both sides' choices to the event log buffer
+        $GLOBALS["console_output_buffer"] .= "Your choice: $choices[$player_input]\n";
+        $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $choices[$computer_choice]\n";
     
-    $computer_choice = $Monster->get_choice($cpu_stored_nukes>0);
+        // Get the winner of the fight. 
+        // TODO: Rewrite method signature into get_winner(Player, Monster, MetaData), emphasis on the MetaData because meta data is being manipulated inside
+        $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster->get_name());
 
-    if($player_input === -1){
-        $player_input_display = "Please make a choice!";
-    }else{
-        $player_input_display = $choices[$player_input];
-        $GLOBALS["console_output_buffer"] .= "Your choice: $player_input_display\n";
-        $computer_choice_display = $choices[$computer_choice];
-        $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $computer_choice_display\n";
-    }
-
-    $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster->get_name());
-
-    if($result === "p"){
-        // If player wins, do damage to monster
-        $damage = $GameLogic->calculate_damage_on_monster($PlayerCharacter, $Monster);
-        $monster_current_hp = $Monster->get_current_hp() - $damage;
-        $Monster->set_current_hp($monster_current_hp);
-        if($monster_current_hp <= 0){
-            // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
-            // Award exp and level up if possible
-            $exp_awarded = $Monster->get_exp();
-            $PlayerCharacter->gain_exp($exp_awarded);
-            // HP regen award for killing monster
-            $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($Monster));
-            // Loot Check
-            if(sizeof($Monster->get_loots()) > 0){
-                foreach($Monster->get_loots() as $id){
-                    $PlayerCharacter->add_inventory($id);
-                    $equipment = $EquipmentFactory->get_equipment($id);
-                    $GLOBALS["console_output_buffer"] .= "\nYou got a " . $equipment->get_name() . "!";
+        if($result === "p"){
+            // If player wins, do damage to monster
+            $damage = $GameLogic->calculate_damage_on_monster($PlayerCharacter, $Monster);
+            $monster_current_hp = $Monster->get_current_hp() - $damage;
+            $Monster->set_current_hp($monster_current_hp);
+            if($monster_current_hp <= 0){
+                // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
+                // Award exp and level up if possible
+                $exp_awarded = $Monster->get_exp();
+                $PlayerCharacter->gain_exp($exp_awarded);
+                // HP regen award for killing monster
+                $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($Monster));
+                // Loot Check
+                if(sizeof($Monster->get_loots()) > 0){
+                    foreach($Monster->get_loots() as $id){
+                        $PlayerCharacter->add_inventory($id);
+                        $equipment = $EquipmentFactory->get_equipment($id);
+                        $GLOBALS["console_output_buffer"] .= "\nYou got a " . $equipment->get_name() . "!";
+                    }
                 }
+                $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!\n";
+                // Change monster
+                $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
+
+                // Reset streaks
+                $player_lose_streak = 0;
+                $cpu_lose_streak = 0;
+                // Monster is changed so it makes sense for this poor new fodder to have no Explosions :(
+                $cpu_stored_nukes = 0;
             }
-            $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!\n";
-            // Change monster
-            $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
 
-            // Reset streaks
-            $player_lose_streak = 0;
-            $cpu_lose_streak = 0;
-            $cpu_stored_nukes = 0;
         }
 
-    }
+        if($result === "c"){
+            // If computer(monster) wins, do damage to player
+            $damage = $GameLogic->calculate_damage_on_player($Monster, $PlayerCharacter);
+            //$player_current_hp = $player_current_hp - $damage;
+            $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() - $damage);
+            // If player dies, reset player HP and do exp penalty, and reset monster to a new one
+            if($PlayerCharacter->get_current_hp()<= 0){
+                $GLOBALS["console_output_buffer"] .= "\n" . "You died!\n";
+                // Reset HP and do exp penalty;
+                //$player_current_hp = $GameLogic->get_hp($player_level);
+                $PlayerCharacter->set_current_hp($PlayerCharacter->get_hp());
+                //$player_exp = floor($player_exp * (1-$GameLogic->get_exp_penalty_rate()));
+                $PlayerCharacter->set_exp(floor($PlayerCharacter->get_exp() * (1-$GameLogic->get_exp_penalty_rate())));
 
-    if($result === "c"){
-        // If computer(monster) wins, do damage to player
-        $damage = $GameLogic->calculate_damage_on_player($Monster, $PlayerCharacter);
-        //$player_current_hp = $player_current_hp - $damage;
-        $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() - $damage);
-        // If player dies, reset player HP and do exp penalty, and reset monster to a new one
-        if($PlayerCharacter->get_current_hp()<= 0){
-            $GLOBALS["console_output_buffer"] .= "\n" . "You died!\n";
-            // Reset HP and do exp penalty;
-            //$player_current_hp = $GameLogic->get_hp($player_level);
-            $PlayerCharacter->set_current_hp($PlayerCharacter->get_hp());
-            //$player_exp = floor($player_exp * (1-$GameLogic->get_exp_penalty_rate()));
-            $PlayerCharacter->set_exp(floor($PlayerCharacter->get_exp() * (1-$GameLogic->get_exp_penalty_rate())));
-
-            // Change monster
-            $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
+                // Change monster
+                $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
+            }
         }
     }
+
+    
 
 ?>  
 
 
 <?php
-    /**
-    * META DATA COOKIE
-    **/
+    // Set meta data cookie
     $thecookie = array();
     $thecookie[$player_lose_streak_key] = $player_lose_streak;
     $thecookie[$player_stored_nukes_key] = $player_stored_nukes;
@@ -314,9 +329,7 @@
 ?>
 
 <?php
-    /**
-    * COMBAT STATS COOKIE
-    **/
+    // Set player stats and monster info cookie
     $thecookie_stats = array();
     $thecookie_stats[$player_level_key] = $PlayerCharacter->get_level();
     $thecookie_stats[$player_current_hp_key] = $PlayerCharacter->get_current_hp();
@@ -332,9 +345,7 @@
 ?>
 
 <?php
-    /**
-    * PLAYER INVENTORY COOKIE
-    **/
+    // Set player inventory cookie
     $thecookie_inventory = $PlayerCharacter->get_inventory();
     setcookie($cookie_name_inventory, serialize($thecookie_inventory), time()+$cookie_expiration_in_seconds, "/");
 ?>
@@ -364,27 +375,23 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
 
 
     <?php
-
          $temp_nukes = $player_stored_nukes;
          if($player_input === 3){
             --$temp_nukes;
          }
          if($temp_nukes > 0){
-            //echo "<div class=\"center\">";
             echo '<form action="konosuba_janken.php" method="POST">
                 <input type="hidden" name="player_input" value="3">
                 <input type="image" src="images/explosion.gif" height="200" width="200" onmouseover="explosion_sound()" onmouseout="explosion_sound_stop()">
                 </form>';
-           // echo "</div>";
          }
-       //  echo "<br>";
     ?>
 
-    <!-- 1. Iterate through inventory and call EquipmentFactory->get_equipment($id) on them all -->
-    <!-- 2. While iterating and creating, maintain 3 arrays for Weapons, Armors, and Accessories -->
-    <!-- 3. Generate output list for each category -->
 
-    <?php
+
+    <?php    
+        // 1. Iterate through inventory and call EquipmentFactory->get_equipment($id) on them all 
+        // 2. While iterating and creating, maintain 3 arrays for Weapons, Armors, and Accessories 
         $weapons_array = array();
         $armors_array = array();
         $accessories_array = array();
@@ -405,6 +412,7 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
     <br>
 
     <?php
+        // 3. Generate output list for each category 
         function equipment_list_printer($equipment, $player_equipment){
             echo "<option ";
             if($equipment->get_id() == $player_equipment->get_id()){
@@ -450,14 +458,8 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
         echo "HP: " . $PlayerCharacter->get_current_hp() . "/" . $PlayerCharacter->get_hp();
         echo ", ";
         echo "ATK: " . $PlayerCharacter->get_atk();
-        //if ($PlayerCharacter->has_weapon()){
-        //    echo "+". $PlayerCharacter->get_weapon()->get_atk();
-        //}
         echo ", ";
         echo "DEF: " . $PlayerCharacter->get_def();
-        //if ($PlayerCharacter->has_armor()){
-        //    echo "+". $PlayerCharacter->get_armor()->get_def();
-        //}
         echo ", ";
         echo "CRIT: " . $PlayerCharacter->get_crit();
         echo "<br>";
