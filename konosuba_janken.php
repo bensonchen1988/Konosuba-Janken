@@ -22,12 +22,14 @@
 <script type="text/javascript">
     var currentMusic;
     var sounds_list = ["explosion","explosion2","lalala","losion","n","n2","plosion","sion","sion2","thinking","truepower"]
-    function explosion_sound(){
+    function explosion_sound()
+    {
         currentMusic = document.getElementById(sounds_list[Math.floor(Math.random()*sounds_list.length)]);
         currentMusic.play();
     }
 
-    function explosion_sound_stop(){
+    function explosion_sound_stop()
+    {
         currentMusic.pause();
         currentMusic.currentTime = 0;
     }
@@ -172,7 +174,8 @@
         equipment_status_output($old_equipment, $equipment);
     }
 
-    function equipment_status_output($old_equipment, $equipment){
+    function equipment_status_output($old_equipment, $equipment)
+    {
         if($old_equipment->get_id() !== $equipment->get_id()){
             if($equipment->get_id() === Unequipped::ID){
                 $GLOBALS["console_output_buffer"] .=  "You've removed " . $old_equipment->get_name() . "!\n";
@@ -232,9 +235,8 @@
 
     if($player_input === -1){
         $player_input_display = "Please make a choice!";
-    }
-    else{
-    	$player_input_display = $choices[$player_input];
+    }else{
+        $player_input_display = $choices[$player_input];
         $GLOBALS["console_output_buffer"] .= "Your choice: $player_input_display\n";
         $computer_choice_display = $choices[$computer_choice];
         $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $computer_choice_display\n";
