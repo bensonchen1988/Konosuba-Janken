@@ -62,7 +62,7 @@ class SoDamageMuchWowSuchOP extends Accessory{
 	const ID = 999999;
 
 	function __construct(){
-		array_push($this->stats_effect, new RockBoost(2), new PaperBoost(2), new ScissorsBoost(2), new StatsBoost(50, 50, 50));
+		array_push($this->stats_effect, new RockBoost(2), new PaperBoost(2), new ScissorsBoost(2), new StatsBoost(50, 50, 50), new ExplosionBoost(2));
 	}
 
 	function get_id(){
@@ -75,6 +75,26 @@ class SoDamageMuchWowSuchOP extends Accessory{
 
 	function get_name(){
 		return "So Damage Much Wow Such OP";
+	}
+}
+
+class TrueSoDamageMuchWowSuchOP extends Accessory{
+	const ID = 666666;
+
+	function __construct(){
+		array_push($this->stats_effect, new RockBoost(5), new PaperBoost(5), new ScissorsBoost(5), new StatsBoost(250, 250, 250), new ExplosionBoost(5));
+	}
+
+	function get_id(){
+		return TrueSoDamageMuchWowSuchOP::ID;
+	}
+
+	function get_stats_string(){
+		return "5X Base Atk, ATK+250, DEF+250, CRIT+250";
+	}
+
+	function get_name(){
+		return "True So Damage Much Wow Such OP";
 	}
 }
 

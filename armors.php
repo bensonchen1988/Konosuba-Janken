@@ -32,4 +32,21 @@ class FrogSkin extends Armor{
 	}
 }
 
+
+class CabbageLeaf extends Armor{
+
+	const ID = 200002;
+
+	public function get_def(){
+		return 3;
+	}
+
+	public function get_name(){
+		return "Cabbage Leaf";
+	}
+
+	public function get_id(){
+		return CabbageLeaf::ID;
+	}
+}
 ?>

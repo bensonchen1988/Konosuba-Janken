@@ -38,6 +38,13 @@ require_once("accessories.php");
 			return $result;
 		}
 
+		function get_choice($has_nuke){
+			if($has_nuke){
+				return rand(0, 3);
+			}
+			return rand(0, 2);
+		}
+
 	}
 
 	class MonsterFactory{
@@ -103,13 +110,40 @@ require_once("accessories.php");
 		function get_crit(){
 			return 2;
 		}
+		function get_choice($has_nuke){
+			// 80% Paper, 10% Rock, 10% Scissors
+			// 70% Paper, 10% Rock, 10% Scissors, 10% Explosion
+			$rock = 10;
+			$paper = 90;
+			$scissors = 100;
+			$explosion = 0;
+			if($has_nuke){
+				$explosion = 100;
+				$scissors = 90;
+				$paper = 80;
+			}
+
+			$roll = rand(1,100);
+			if($roll >= 1 and $roll <= $rock){
+				return 0;
+			}
+			if($roll > $rock and $roll <= $paper){
+				return 1;
+			}
+			if($roll > $paper and $roll <= $scissors){
+				return 2;
+			}
+			if($roll > $scissors and $roll <= $explosion){
+				return 3;
+			}
+		}
 	}
 	class FlyingCabbage extends Monster{
 
 		const ID = 102;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
-			$this->loot_table = array(RockAmulet::ID=>5000);
+			$this->loot_table = array(RockAmulet::ID=>5000, CabbageLeaf::ID=>2500);
 		}
 		function get_id(){
 			return FlyingCabbage::ID;
@@ -235,7 +269,7 @@ require_once("accessories.php");
 		const ID = 106;
 		function __construct(){
 			$this->current_hp = $this->get_hp();
-			$this->loot_table = array(SoDamageMuchWowSuchOP::ID=>10000);
+			$this->loot_table = array(SoDamageMuchWowSuchOP::ID=>10000, TrueSoDamageMuchWowSuchOP::ID=>1000);
 		}
 		function get_id(){
 			return Hanz::ID;
@@ -247,19 +281,19 @@ require_once("accessories.php");
 			return "Hanz";
 		}
 		function get_atk(){
-			return 15;
+			return 55;
 		}
 		function get_def(){
-			return 10;
+			return 20;
 		}
 		function get_hp(){
-			return 160;
+			return 260;
 		}
 		function get_exp(){
-			return 10;
+			return 20;
 		}
 		function get_crit(){
-			return 7;
+			return 10;
 		}
 	}
 

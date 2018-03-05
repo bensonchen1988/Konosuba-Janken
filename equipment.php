@@ -18,10 +18,12 @@ class EquipmentFactory{
 			case WoodenSword::ID: return new WoodenSword();
 			// Armors
 			case FrogSkin::ID: return new FrogSkin();
+			case CabbageLeaf::ID: return new CabbageLeaf();
 			// Accessories
 			case LuckyPebbles::ID: return new LuckyPebbles();
 			case RockAmulet::ID: return new RockAmulet();
 			case SoDamageMuchWowSuchOP::ID: return new SoDamageMuchWowSuchOP();
+			case TrueSoDamageMuchWowSuchOP::ID: return new TrueSoDamageMuchWowSuchOP();
 			default: return new Unequipped();
 		}
 	}

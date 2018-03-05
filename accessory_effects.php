@@ -7,6 +7,7 @@ class AccessoryEffects{
 	const TYPE_ROCK_ATTACK_BOOST = 2;
 	const TYPE_PAPER_ATTACK_BOOST = 3;
 	const TYPE_SCISSORS_ATTACK_BOOST = 4;
+	const TYPE_EXPLOSION_ATTACK_BOOST = 5;
 }
 
 interface IEffects{
@@ -96,6 +97,23 @@ class ScissorsBoost implements IEffectsAttackType{
 	}
 	function get_type(){
 		return AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST;
+	}
+
+	function get_multiplier(){
+		return $this->multiplier;
+	}
+
+}
+
+
+class ExplosionBoost implements IEffectsAttackType{
+	private $multiplier;
+
+	function __construct($m){
+		$this->multiplier = $m;
+	}
+	function get_type(){
+		return AccessoryEffects::TYPE_EXPLOSION_ATTACK_BOOST;
 	}
 
 	function get_multiplier(){

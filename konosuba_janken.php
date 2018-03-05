@@ -228,7 +228,7 @@
 <?php  
     $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
     
-    $computer_choice = rand(0, 2);
+    $computer_choice = $Monster->get_choice($cpu_stored_nukes>0);
 
     if($player_input === -1){
         $player_input_display = "Please make a choice!";
@@ -236,9 +236,6 @@
     else{
     	$player_input_display = $choices[$player_input];
         $GLOBALS["console_output_buffer"] .= "Your choice: $player_input_display\n";
-        if($cpu_stored_nukes > 0){
-            $computer_choice = rand(0, 3);
-        }
         $computer_choice_display = $choices[$computer_choice];
         $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $computer_choice_display\n";
     }
@@ -284,6 +281,7 @@
         $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() - $damage);
         // If player dies, reset player HP and do exp penalty, and reset monster to a new one
         if($PlayerCharacter->get_current_hp()<= 0){
+            $GLOBALS["console_output_buffer"] .= "\n" . "You died!\n";
             // Reset HP and do exp penalty;
             //$player_current_hp = $GameLogic->get_hp($player_level);
             $PlayerCharacter->set_current_hp($PlayerCharacter->get_hp());
@@ -296,7 +294,12 @@
     }
 
 ?>  
+
+
 <?php
+    /**
+    * META DATA COOKIE
+    **/
     $thecookie = array();
     $thecookie[$player_lose_streak_key] = $player_lose_streak;
     $thecookie[$player_stored_nukes_key] = $player_stored_nukes;
@@ -309,7 +312,9 @@
 ?>
 
 <?php
-
+    /**
+    * COMBAT STATS COOKIE
+    **/
     $thecookie_stats = array();
     $thecookie_stats[$player_level_key] = $PlayerCharacter->get_level();
     $thecookie_stats[$player_current_hp_key] = $PlayerCharacter->get_current_hp();
@@ -325,6 +330,9 @@
 ?>
 
 <?php
+    /**
+    * PLAYER INVENTORY COOKIE
+    **/
     $thecookie_inventory = $PlayerCharacter->get_inventory();
     setcookie($cookie_name_inventory, serialize($thecookie_inventory), time()+$cookie_expiration_in_seconds, "/");
 ?>

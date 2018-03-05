@@ -140,7 +140,8 @@ require_once("accessory_effects.php");
 					case AccessoryEffects::TYPE_STATS_BOOST: $this->apply_stat_effects($AccessoryEffects, $CombatData); break;
 					case AccessoryEffects::TYPE_ROCK_ATTACK_BOOST:
 					case AccessoryEffects::TYPE_PAPER_ATTACK_BOOST: 
-					case AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST: $this->apply_type_effects($AccessoryEffects, $CombatData); break;
+					case AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST:
+					case AccessoryEffects::TYPE_EXPLOSION_ATTACK_BOOST: $this->apply_type_effects($AccessoryEffects, $CombatData); break;
 					default: break;
 				}
 			}
@@ -157,6 +158,7 @@ require_once("accessory_effects.php");
 				case AccessoryEffects::TYPE_ROCK_ATTACK_BOOST:if($CombatData->input == 0){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
 				case AccessoryEffects::TYPE_PAPER_ATTACK_BOOST:if($CombatData->input == 1){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
 				case AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST:if($CombatData->input == 2){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
+				case AccessoryEffects::TYPE_EXPLOSION_ATTACK_BOOST:if($CombatData->input == 3){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
 				default: break;
 			}
 		}
