@@ -33,9 +33,10 @@ Accessories can provide stat boosts, and also special effects such as "1.5X base
 
 Current player max level - 99
 
+Checking the Auto Battle checkbox will make the game randomly send an available choice every 3 seconds.
 Future features:  
 
 -Randomize encounters to be within a range of player level  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
--Auto battle and farming mode
+-Farming mode
 -Single use items
