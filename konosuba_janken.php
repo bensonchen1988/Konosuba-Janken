@@ -22,6 +22,7 @@
 <!-- Javascript help for some sweet audio! -->
 <!-- Plays an audio file selected at random from the list below when the user hovers their mouse over the Explosion image -->
 <script type="text/javascript">
+    // Explosion audio
     var currentMusic;
     var sounds_list = ["explosion","explosion2","lalala","losion","n","n2","plosion","sion","sion2","thinking","truepower"]
     function explosion_sound()
@@ -35,6 +36,44 @@
         currentMusic.pause();
         currentMusic.currentTime = 0;
     }
+
+    // Auto Battle
+    function autoBattleCheckBox(checkbox){
+        if(checkbox.checked){
+            localStorage.setItem("autoBattle", "checked");
+        }
+        else{
+            localStorage.setItem("autoBattle", "unchecked");
+        }
+        doAutoBattle();
+    }
+
+    function doAutoBattle(){
+        setTimeout(function () {
+        if(localStorage.getItem("autoBattle") == "checked"){
+            var random = Math.floor(Math.random() * 3);
+            if(document.getElementById("explosion_input") !== null){
+                random = Math.floor(Math.random() * 4); // 0 ~ 3
+            }
+            switch(random){
+                case 0: 
+                document.getElementById("rock_input").submit();
+                break;
+                case 1: 
+                document.getElementById("paper_input").submit();
+                break;
+                case 2: 
+                document.getElementById("scissors_input").submit();
+                break;
+                case 3: 
+                document.getElementById("explosion_input").submit();
+                break;
+            }
+        }
+    }, 3000);
+    }
+
+
 </script>
 
 <audio id="explosion">
@@ -95,6 +134,7 @@
         <option value = 104>Dullahan</option>
         <option value = 105>Destroyer</option>
         <option value = 106>Hanz</option>
+        <option value = 107>Winter General</option>
         <option value = 999>Training Dummy</option>
     <input type="submit" value="Change Monster">
     </select>
@@ -358,17 +398,17 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
 <br>
 
 <table>
-    <form action="konosuba_janken.php" method="POST" id = "rock">
+    <form action="konosuba_janken.php" method="POST" id = "rock_input">
         <input type="hidden" name="player_input" value="0">
         <input type="image" src="images/rock.jpg" height="200" width="200">
     </form>
 
-    <form action="konosuba_janken.php" method="POST">
-        <input type="hidden" name="player_input" value="1" id = "paper">
+    <form action="konosuba_janken.php" method="POST" id = "paper_input">
+        <input type="hidden" name="player_input" value="1">
         <input type="image" src="images/paper.jpg" height="200" width="200">
     </form>
 
-    <form action="konosuba_janken.php" method="POST" id = "scissors">
+    <form action="konosuba_janken.php" method="POST" id = "scissors_input">
         <input type="hidden" name="player_input" value="2">
         <input type="image" src="images/scissors.jpg" height="200" width="200">
     </form>
@@ -380,13 +420,20 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
             --$temp_nukes;
          }
          if($temp_nukes > 0){
-            echo '<form action="konosuba_janken.php" method="POST">
+            echo '<form action="konosuba_janken.php" method="POST" id = "explosion_input">
                 <input type="hidden" name="player_input" value="3">
                 <input type="image" src="images/explosion.gif" height="200" width="200" onmouseover="explosion_sound()" onmouseout="explosion_sound_stop()">
                 </form>';
          }
     ?>
 
+    <label for="auto_battle_checkbox">Auto Battle</label>
+    <input id="auto_battle_checkbox" type="checkbox" onclick="autoBattleCheckBox(this)">
+
+    <script type="text/javascript">
+        document.getElementById("auto_battle_checkbox").checked = localStorage.getItem("autoBattle") == "checked";
+        doAutoBattle();
+    </script>
 
 
     <?php    
