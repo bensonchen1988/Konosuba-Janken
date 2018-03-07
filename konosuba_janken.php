@@ -4,6 +4,7 @@
     require_once("purephp/monsters.php");
     require_once("purephp/monsters_index.php");
     require_once("purephp/equipment.php");
+    require_once("purephp/database.php");
 
     session_start();
     if(!isset($_SESSION["user"])){
@@ -14,7 +15,7 @@
     $GameLogic = new GameLogic();
     $MonsterFactory = new MonsterFactory();
     $EquipmentFactory = new EquipmentFactory();
-    $cookie_expiration_in_seconds = 86400*30;
+    $KonosubaDB = new KonosubaDB();
     // Buffer used for aggregating all event logs to output into a textarea at the end of the user to see
     $GLOBALS["console_output_buffer"] = "";
     ob_start();
@@ -144,18 +145,12 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
     <input type="submit" value="Change Monster">
     </select>
 </form>
+
 <?php
-    // meta data about game progress
-    $cookie_name = "meta_data_cookie";
+    // Load user-specific game state
+    $game_state = $KonosubaDB->get_game_state($_SESSION["user"]);
 
-    $player_lose_streak_key = "ulsk";
-    $player_stored_nukes_key = "usnk";
-    $player_wins_key = "uwk";
-    $cpu_lose_streak_key = "clsk";
-    $cpu_stored_nukes_key = "csnk";
-    $cpu_wins_key = "cnk";
-    $farm_mode_key = "fmk";
-
+    // Default initialization
     $player_lose_streak = 0;
     $player_stored_nukes = 0;
     $player_wins = 0;
@@ -163,69 +158,32 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
     $cpu_stored_nukes = 0;
     $cpu_wins = 0;
     $farm_mode = 0;
-
-    if(isset($_COOKIE[$cookie_name])){
-        $cook = unserialize($_COOKIE[$cookie_name]);
-        $player_lose_streak = $cook[$player_lose_streak_key];
-        $player_stored_nukes = $cook[$player_stored_nukes_key];
-        $player_wins = $cook[$player_wins_key];
-        $cpu_lose_streak = $cook[$cpu_lose_streak_key];
-        $cpu_stored_nukes = $cook[$cpu_stored_nukes_key];
-        $cpu_wins = $cook[$cpu_wins_key];
-        $farm_mode = $cook[$farm_mode_key];
-    }
-
-    if(isset($_POST["farm"])){
-        $farm_mode = ($farm_mode - 1) * -1;
-    }
-
-?>
-
-    <form action="konosuba_janken.php" method="post">
-
-<?php 
-echo '<input type="submit" name="farm" value="Farm Mode Is ';
-if($farm_mode === 1){
-    echo 'On"';
-}
-else{
-    echo 'Off"';
-}
-echo ">";
-
-?> 
-
-    </form>
-
-<?php
-    // player stats and equipment status, as well as current monster's hp and id
-    $cookie_name_stats = "stats_cookie";
-
-    $player_level_key = "plk";
-    $player_current_hp_key = "pchk";
-    $player_exp_key = "pek";
-    $player_weapon_key = "pwk";
-    $player_armor_key = "pak";
-    $player_accessory_key = "pacck";
-    $monster_current_hp_key = "mchk";
-    $monster_id_key = "midk";
-
-    // Default initialization
     $PlayerCharacter = new Player();
     $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
 
-    // If stats cookie is set, load the values into the PlayerCharacter and Monster objects
-    if(isset($_COOKIE[$cookie_name_stats])){
-        $cook_stats = unserialize($_COOKIE[$cookie_name_stats]);
-        $PlayerCharacter->set_level($cook_stats[$player_level_key]);
-        $PlayerCharacter->set_exp($cook_stats[$player_exp_key]);
-        $PlayerCharacter->set_current_hp($cook_stats[$player_current_hp_key]);
-        $PlayerCharacter->set_weapon($EquipmentFactory->get_equipment($cook_stats[$player_weapon_key]));
-        $PlayerCharacter->set_armor($EquipmentFactory->get_equipment($cook_stats[$player_armor_key]));
-        $PlayerCharacter->set_accessory($EquipmentFactory->get_equipment($cook_stats[$player_accessory_key]));
-        $Monster = $MonsterFactory->create_monster_by_id($cook_stats[$monster_id_key]);
-        $Monster->set_current_hp($cook_stats[$monster_current_hp_key]);
+    // If game state for user exists in DB, load the values into the PlayerCharacter and Monster objects
+    if($game_state !== false){
+        $PlayerCharacter->set_level($game_state["player_level"]);
+        $PlayerCharacter->set_exp($game_state["player_exp"]);
+        $PlayerCharacter->set_current_hp($game_state["player_current_hp"]);
+        $PlayerCharacter->set_weapon($EquipmentFactory->get_equipment($game_state["player_weapon"]));
+        $PlayerCharacter->set_armor($EquipmentFactory->get_equipment($game_state["player_armor"]));
+        $PlayerCharacter->set_accessory($EquipmentFactory->get_equipment($game_state["player_accessory"]));
+        $Monster = $MonsterFactory->create_monster_by_id($game_state["monster_id"]);
+        $Monster->set_current_hp($game_state["monster_current_hp"]);
         
+        $player_lose_streak =$game_state["player_lose_streak"];
+        $player_stored_nukes = $game_state["player_stored_nukes"];
+        $player_wins = $game_state["player_wins"];
+        $cpu_lose_streak = $game_state["monster_lose_streak"];
+        $cpu_stored_nukes = $game_state["monster_stored_nukes"];
+        $cpu_wins = $game_state["monster_wins"];
+        $farm_mode = $game_state["farm_mode"];
+    }
+
+
+    if(isset($_POST["farm"])){
+        $farm_mode = ($farm_mode - 1) * -1;
     }
 
     // Update weapon equipment status
@@ -267,11 +225,11 @@ echo ">";
 
 
     // Load inventory
-    $cookie_name_inventory = "inventory_cookie";
-    if(isset($_COOKIE[$cookie_name_inventory])){
-        $inventory = unserialize($_COOKIE[$cookie_name_inventory]);
-        $PlayerCharacter->set_inventory($inventory);
+    $inventory_db = $KonosubaDB->get_inventory($_SESSION["user"]);
+    while($row = $inventory_db->fetch()){
+            $PlayerCharacter->add_inventory($row["equipment_id"]);
     }
+    
 
     // Process monster change request
     if(isset($_POST["monster_select"])){
@@ -287,6 +245,7 @@ echo ">";
         $GLOBALS["console_output_buffer"] .= "Resetted game!\n"; 
         $PlayerCharacter = new Player();
         $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
+        $KonosubaDB->reset_player_inventory($_SESSION["user"]);
 
         $player_lose_streak = 0;
         $player_stored_nukes = 0;
@@ -296,9 +255,23 @@ echo ">";
         $cpu_wins = 0;
         $farm_mode = 0;
     }
-
-
 ?>
+
+
+<form action="konosuba_janken.php" method="post">
+<?php 
+echo '<input type="submit" name="farm" value="Farm Mode Is ';
+if($farm_mode == 1){
+    echo 'On"';
+}
+else{
+    echo 'Off"';
+}
+echo ">";
+
+?> 
+</form>
+
 
 <?php  
     /**********************************************************************************
@@ -341,14 +314,14 @@ echo ">";
                 // Loot Check
                 if(sizeof($Monster->get_loots()) > 0){
                     foreach($Monster->get_loots() as $id){
-                        $PlayerCharacter->add_inventory($id);
+                        $KonosubaDB->add_inventory($_SESSION["user"], $id);
                         $equipment = $EquipmentFactory->get_equipment($id);
                         $GLOBALS["console_output_buffer"] .= "\nYou got a " . $equipment->get_name() . "!";
                     }
                 }
                 $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!\n";
                 // Change monster
-                if($farm_mode === 1){
+                if($farm_mode == 1){
                     $Monster = $MonsterFactory->create_monster_by_id($Monster->get_id());
                 }
                 else{
@@ -388,41 +361,10 @@ echo ">";
 
 ?>  
 
-
 <?php
-    // Set meta data cookie
-    $thecookie = array();
-    $thecookie[$player_lose_streak_key] = $player_lose_streak;
-    $thecookie[$player_stored_nukes_key] = $player_stored_nukes;
-    $thecookie[$player_wins_key] = $player_wins;
-    $thecookie[$cpu_lose_streak_key] = $cpu_lose_streak;
-    $thecookie[$cpu_stored_nukes_key] = $cpu_stored_nukes;
-    $thecookie[$cpu_wins_key] = $cpu_wins;
-    $thecookie[$farm_mode_key] = $farm_mode;
+    // Store game state into DB
+    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode);
 
-    setcookie($cookie_name, serialize($thecookie), time()+$cookie_expiration_in_seconds, "/");
-?>
-
-<?php
-    // Set player stats and monster info cookie
-    $thecookie_stats = array();
-    $thecookie_stats[$player_level_key] = $PlayerCharacter->get_level();
-    $thecookie_stats[$player_current_hp_key] = $PlayerCharacter->get_current_hp();
-    $thecookie_stats[$monster_current_hp_key] = $Monster->get_current_hp();
-    $thecookie_stats[$monster_id_key] = $Monster->get_id();
-    $thecookie_stats[$player_exp_key] = $PlayerCharacter->get_exp();
-    $thecookie_stats[$player_weapon_key] = $PlayerCharacter->get_weapon()->get_id();
-    $thecookie_stats[$player_armor_key] = $PlayerCharacter->get_armor()->get_id();
-    $thecookie_stats[$player_accessory_key] = $PlayerCharacter->get_accessory()->get_id();
-
-    setcookie($cookie_name_stats, serialize($thecookie_stats), time()+$cookie_expiration_in_seconds, "/");
-
-?>
-
-<?php
-    // Set player inventory cookie
-    $thecookie_inventory = $PlayerCharacter->get_inventory();
-    setcookie($cookie_name_inventory, serialize($thecookie_inventory), time()+$cookie_expiration_in_seconds, "/");
 ?>
 
 <img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
