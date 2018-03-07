@@ -2,6 +2,7 @@
     require_once("purephp/game_logic.php");
     require_once("purephp/player.php");
     require_once("purephp/monsters.php");
+    require_once("purephp/monsters_index.php");
     require_once("purephp/equipment.php");
 
     session_start();
@@ -134,15 +135,12 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
 
 <form action="konosuba_janken.php" method="post">
     <select id="monster_select" name="monster_select"> 
-        <!-- TODO: PROGRAMMATICALLY GENERATE THE LIST -->
-        <option value = 101>Giant Frog</option>
-        <option value = 102>Flying Cabbage</option>
-        <option value = 103>Dullahan's Undead</option>
-        <option value = 104>Dullahan</option>
-        <option value = 105>Destroyer</option>
-        <option value = 106>Hanz</option>
-        <option value = 107>Winter General</option>
-        <option value = 999>Training Dummy</option>
+        <?php
+        $monster_index = get_monster_index();
+        foreach($monster_index as $ID => $CLASSNAME){
+            echo "<option value = " . $ID . ">" . $CLASSNAME::NAME . "</option>";
+        }
+        ?>
     <input type="submit" value="Change Monster">
     </select>
 </form>
@@ -205,12 +203,12 @@ echo ">";
 
     $player_level_key = "plk";
     $player_current_hp_key = "pchk";
-    $monster_current_hp_key = "mchk";
-    $monster_id_key = "midk";
     $player_exp_key = "pek";
     $player_weapon_key = "pwk";
     $player_armor_key = "pak";
     $player_accessory_key = "pacck";
+    $monster_current_hp_key = "mchk";
+    $monster_id_key = "midk";
 
     // Default initialization
     $PlayerCharacter = new Player();

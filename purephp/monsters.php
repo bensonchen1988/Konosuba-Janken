@@ -3,6 +3,7 @@ require_once("equipment.php");
 require_once("weapons.php");
 require_once("armors.php");
 require_once("accessories.php");
+require_once("monsters_index.php");
 
     abstract class Monster
     {
@@ -82,6 +83,12 @@ require_once("accessories.php");
         **/
         function create_monster_by_id($id)
         {
+            $monster_index = get_monster_index();
+            if(!array_key_exists($id, $monster_index)){
+                throw new Exception("Invalid monster ID");
+            }
+            return new $monster_index[$id]();
+            /*
             switch($id){
                 case GiantFrog::ID: return new GiantFrog();
                 case FlyingCabbage::ID: return new FlyingCabbage();
@@ -89,10 +96,10 @@ require_once("accessories.php");
                 case Dullahan::ID: return new Dullahan();
                 case Destroyer::ID: return new Destroyer();
                 case Hanz::ID: return new Hanz();
-                case Hanz::ID: return new Hanz();
                 case WinterGeneral::ID: return new WinterGeneral();
                 default: throw new Exception("Invalid monster ID");
             }
+            */
         }
     }
 
@@ -103,6 +110,7 @@ require_once("accessories.php");
     class GiantFrog extends Monster
     {
         const ID = 101;
+        const NAME = "Giant Frog";
 
         function __construct()
         {
@@ -181,6 +189,7 @@ require_once("accessories.php");
     {
 
         const ID = 102;
+        const NAME = "Flying Cabbage";
         function __construct()
         {
             $this->current_hp = $this->get_hp();
@@ -230,6 +239,7 @@ require_once("accessories.php");
     class DullahansUndeads extends Monster
     {
         const ID = 103;
+        const NAME = "Dullahan's Undeads";
         function __construct()
         {
             $this->current_hp = $this->get_hp();
@@ -275,6 +285,7 @@ require_once("accessories.php");
     class Dullahan extends Monster
     {
         const ID = 104;
+        const NAME = "Dullahan";
         function __construct()
         {
             $this->current_hp = $this->get_hp();
@@ -349,6 +360,7 @@ require_once("accessories.php");
     {
 
         const ID = 105;
+        const NAME = "Moving Fortress Destroyer";
         function __construct()
         {
             $this->current_hp = $this->get_hp();
@@ -395,6 +407,7 @@ require_once("accessories.php");
     class Hanz extends Monster
     {
         const ID = 106;
+        const NAME = "Hanz";
         function __construct()
         {
             $this->current_hp = $this->get_hp();
@@ -441,6 +454,7 @@ require_once("accessories.php");
     class WinterGeneral extends Monster
     {
         const ID = 107;
+        const NAME = "Winter General";
         function __construct()
         {
             $this->current_hp = $this->get_hp();
@@ -488,6 +502,7 @@ require_once("accessories.php");
     class TrainingDummy extends Monster
     {
         const ID = 999;
+        const NAME = "Training Dummy";
         function __construct()
         {
             $this->current_hp = $this->get_hp();

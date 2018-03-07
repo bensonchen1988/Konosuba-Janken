@@ -38,7 +38,33 @@ final class KonosubaDB
 
 	public function record_meta_data($stats_array)
 	{
-		$PS = $this->connection->prepare("select * from wamp_practice");
+		
+	}
+
+	public function record_game_state($username, $player_level, $player_exp, $player_weapon, $player_armor, $player_accessory, $player_current_hp, $monster_current_hp, $monster_id)
+	{
+		// Input mapping
+		$input = array(":username" => $username, ":player_level" => $player_level, ":player_exp" => $player_exp, ":player_weapon" => $player_weapon, ":player_armor" => $player_armor, ":player_accessory" => $player_accessory, ":player_current_hp" => $player_current_hp, ":monster_current_hp" => $monster_current_hp, ":monster_id" => $monster_id);
+		// Check if username record exist
+		$result_set = $this->get_game_state($username);
+		if($result_set === false){
+			// Previous record doesn't exist, create new record
+			$PS2 = $this->connection->prepare("insert into game_state (username, player_level, player_exp, player_weapon, player_armor, player_accessory, player_current_hp, monster_current_hp, monster_id) values (:username, :player_level, :player_exp, :player_weapon, :player_armor, :player_accessory, :player_current_hp, :monster_current_hp, :monster_id)");
+			$PS2->execute($input);
+		}
+		else{
+			// Exists, do update
+			$PS3 = $this->connection->prepare("update game_state set player_level = :player_level, player_exp = :player_exp, player_weapon = :player_weapon, player_armor = :player_armor, player_accessory = :player_accessory, player_current_hp = :player_current_hp, monster_current_hp = :monster_current_hp, monster_id = :monster_id where username = :username");
+			$PS3->execute($input);
+		}
+		// But mommy I want a Playstation 4!
+	}
+
+	public function get_game_state($username)
+	{
+		$PS = $this->connection->prepare("select * from game_state where username = :username");
+		$PS->execute(array(":username" => $username));
+		return $PS->fetch();
 	}
 
 	public function get_login($username)

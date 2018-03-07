@@ -10,14 +10,16 @@ if(!isset($_POST["username"]) || !isset($_POST["password"])){
 	header("Location: index.php");
 }
 
+$password_encrypted = password_hash($_POST["password"], PASSWORD_DEFAULT);
+
 $result_set = $dbutil->get_login($_POST["username"]);
 if($result_set === false){
-	$dbutil->sign_up($_POST["username"], $_POST["password"]);
+	$dbutil->sign_up($_POST["username"], $password_encrypted);
 	$_SESSION["user"] = $_POST["username"];
 	header("Location: konosuba_janken.php");
 }
 else{
-	if(strcmp($result_set["password_encrypted"], $_POST["password"]) == 0){
+	if(password_verify($_POST["password"], $result_set["password_encrypted"])){
 		$_SESSION["user"] = $_POST["username"];
 		header("Location: konosuba_janken.php");
 	}
