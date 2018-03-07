@@ -426,7 +426,7 @@ require_once("accessories.php");
         }
         function get_exp()
         {
-            return 40;
+            return 140;
         }
         function get_crit()
         {
@@ -472,7 +472,7 @@ require_once("accessories.php");
         }
         function get_exp()
         {
-            return 35;
+            return 135;
         }
         function get_crit()
         {

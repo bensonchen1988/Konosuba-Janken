@@ -3,6 +3,13 @@
     require_once("purephp/player.php");
     require_once("purephp/monsters.php");
     require_once("purephp/equipment.php");
+
+    session_start();
+    if(!isset($_SESSION["user"])){
+    $_SESSION["login_message"] = "youuuuuuuuuuuu get off my lawn";
+    header("Location: index.php");
+    }
+
     $GameLogic = new GameLogic();
     $MonsterFactory = new MonsterFactory();
     $EquipmentFactory = new EquipmentFactory();
@@ -18,6 +25,7 @@
 </head>
 <body>  
 <h1> Konosuba Rock Paper Scissors! </h1>
+Logged in as : <?php echo $_SESSION["user"]; ?>
 
 <!-- Javascript help for some sweet audio! -->
 <!-- Plays an audio file selected at random from the list below when the user hovers their mouse over the Explosion image -->
@@ -186,7 +194,7 @@
     $PlayerCharacter = new Player();
     $Monster = $MonsterFactory->create_monster_by_id(GiantFrog::ID);
 
-    // If stats cookie is set, load the values into the PlayerChacter and Monster objects
+    // If stats cookie is set, load the values into the PlayerCharacter and Monster objects
     if(isset($_COOKIE[$cookie_name_stats])){
         $cook_stats = unserialize($_COOKIE[$cookie_name_stats]);
         $PlayerCharacter->set_level($cook_stats[$player_level_key]);
