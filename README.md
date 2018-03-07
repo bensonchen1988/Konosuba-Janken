@@ -3,6 +3,8 @@ PHP practice!
 
 This is a small personal project to practice PHP with.
 
+Currently uses MySQL as database.
+
 A Konosuba themed Rock-Paper-Scissors game, with absolutely horrendous UI because I can't CSS (yet)!
 
 At the moment this game uses cookies to store state, so it is veeeeeery easily hacked right now.   
