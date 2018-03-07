@@ -12,8 +12,9 @@ if(!isset($_POST["username"]) || !isset($_POST["password"])){
 
 $result_set = $dbutil->get_login($_POST["username"]);
 if($result_set === false){
-	$_SESSION["login_message"] = "username not found";
-	header("Location: index.php");
+	$dbutil->sign_up($_POST["username"], $_POST["password"]);
+	$_SESSION["user"] = $_POST["username"];
+	header("Location: konosuba_janken.php");
 }
 else{
 	if(strcmp($result_set["password_encrypted"], $_POST["password"]) == 0){
@@ -21,8 +22,8 @@ else{
 		header("Location: konosuba_janken.php");
 	}
 	else{
-		$_SESSION["login_message"] = "|" . $result_set["password_encrypted"] . "| : |" . $_POST["password"] . "|" . strcmp($result_set["password_encrypted"], $_POST["password"]);
-	header("Location: index.php");
+		$_SESSION["login_message"] = "Wrong password";
+		header("Location: index.php");
 	}
 }
 

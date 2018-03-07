@@ -78,9 +78,8 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
                 break;
             }
         }
-    }, 3000);
+    }, 500);
     }
-
 
 </script>
 
@@ -157,6 +156,7 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
     $cpu_lose_streak_key = "clsk";
     $cpu_stored_nukes_key = "csnk";
     $cpu_wins_key = "cnk";
+    $farm_mode_key = "fmk";
 
     $player_lose_streak = 0;
     $player_stored_nukes = 0;
@@ -164,6 +164,7 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
     $cpu_lose_streak = 0;
     $cpu_stored_nukes = 0;
     $cpu_wins = 0;
+    $farm_mode = 0;
 
     if(isset($_COOKIE[$cookie_name])){
         $cook = unserialize($_COOKIE[$cookie_name]);
@@ -173,9 +174,30 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
         $cpu_lose_streak = $cook[$cpu_lose_streak_key];
         $cpu_stored_nukes = $cook[$cpu_stored_nukes_key];
         $cpu_wins = $cook[$cpu_wins_key];
+        $farm_mode = $cook[$farm_mode_key];
+    }
+
+    if(isset($_POST["farm"])){
+        $farm_mode = ($farm_mode - 1) * -1;
     }
 
 ?>
+
+    <form action="konosuba_janken.php" method="post">
+
+<?php 
+echo '<input type="submit" name="farm" value="Farm Mode Is ';
+if($farm_mode === 1){
+    echo 'On"';
+}
+else{
+    echo 'Off"';
+}
+echo ">";
+
+?> 
+
+    </form>
 
 <?php
     // player stats and equipment status, as well as current monster's hp and id
@@ -274,6 +296,7 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
         $cpu_lose_streak = 0;
         $cpu_stored_nukes = 0;
         $cpu_wins = 0;
+        $farm_mode = 0;
     }
 
 
@@ -327,7 +350,12 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
                 }
                 $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!\n";
                 // Change monster
-                $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
+                if($farm_mode === 1){
+                    $Monster = $MonsterFactory->create_monster_by_id($Monster->get_id());
+                }
+                else{
+                    $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
+                }   
 
                 // Reset streaks
                 $player_lose_streak = 0;
@@ -372,6 +400,7 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
     $thecookie[$cpu_lose_streak_key] = $cpu_lose_streak;
     $thecookie[$cpu_stored_nukes_key] = $cpu_stored_nukes;
     $thecookie[$cpu_wins_key] = $cpu_wins;
+    $thecookie[$farm_mode_key] = $farm_mode;
 
     setcookie($cookie_name, serialize($thecookie), time()+$cookie_expiration_in_seconds, "/");
 ?>

@@ -48,6 +48,12 @@ final class KonosubaDB
 		return $PS->fetch();
 	}
 
+	public function sign_up($username, $password)
+	{
+		$PS = $this->connection->prepare("insert into user_login (username, password_encrypted) values (:username, :password)");
+		$PS->execute( array(":username" => $username, ":password" => $password));
+	}
+
 }
 
 ?>
