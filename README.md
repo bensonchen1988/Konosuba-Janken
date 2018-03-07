@@ -35,9 +35,10 @@ Current player max level - 99
 
 Checking the Auto Battle checkbox will make the game randomly send an available choice every 3 seconds.  
 
+Toggling Farm Mode to On lets you continously fight the same monster over and over again. Use case: farming for rare drops, such wow much synergy very auto.
+
 Future features:  
 
 -Randomize encounters to be within a range of player level  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
--Farming mode
 -Single use items
