@@ -8,7 +8,13 @@
 
     session_start();
     if(!isset($_SESSION["user"])){
-    $_SESSION["login_message"] = "youuuuuuuuuuuu get off my lawn";
+    $_SESSION["login_message"] = "Please login again";
+    header("Location: index.php");
+    }
+    // Process logout
+    if(isset($_POST["logout"])){
+    $_SESSION["login_message"] = "Logged out";
+    unset($_SESSION["user"]);
     header("Location: index.php");
     }
 
@@ -80,7 +86,7 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
                 break;
             }
         }
-    }, 500);
+    }, 1500);
     }
 
 </script>
@@ -368,7 +374,7 @@ echo ">";
 
 ?>
 
-<img src = <?php echo "\"images/" . $Monster->get_name() ."\"";?> height = "300" width = "400" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
+<img src = <?php echo "\"images/" . $Monster->get_name() . ".jpg\"";?> height = "300" width = "400" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
 <br>
 <?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
 <br>
@@ -507,6 +513,10 @@ textarea{
 <br> Computer's lose streak: <?php echo $cpu_lose_streak ?>
 <br> Computer's Explosions available: <?php echo $cpu_stored_nukes ?>
 <br> Computer's total wins: <?php echo $cpu_wins ?>
+
+<form action="konosuba_janken.php" method="post">
+<input type="submit" name="logout" value="Logout">
+</form>
 
 <?php 
     ob_end_flush();
