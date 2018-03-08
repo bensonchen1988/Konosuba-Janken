@@ -44,4 +44,4 @@ Future features:
 -Randomize encounters to be within a range of player level  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
 -Single use items  
--Player Characters (Kazuma, Aqua, Megumin, Darkness), each with their own special passives (eg. Aqua regens HP per turn, Megumin does 10x damage on Explosion... etc)
+-Player Characters (Kazuma, Aqua, Megumin, Darkness), each with their own special passives (eg. Aqua regens HP per turn, Megumin does 10x damage on Explosion, Darkness has 80% damage reduction but only 20% atk power ... etc)
