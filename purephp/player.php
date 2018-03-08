@@ -41,11 +41,11 @@ require_once("equipment.php");
 
         function get_avatar_description(){
             switch($this->character_mode){
-                case 0: return "Kazuma, the cunning Adventurer, who always finds a way to defeat his foes. You deal an extra <Level> amount of unmitigated damage everytime you win when Kazuma is in the front line.";
-                case 1: return "Aqua, the Arch Priest, who is also the Goddess of Water. You recover <Level> amount of HP at the start of each turn when Aqua is in the front line.";
-                case 2: return "Megumin, the Explosion crazed Arch Wizard. Explosions do 5x more damage and pierces defense when Megumin is in the front line.";
-                case 3: return "Darkness, the masochistic Crusader. Gain 80% damage reduction, but deal 80% less damage when Darkness is in the front line.";
-                default: return "huh?";
+                case Player::MODE_KAZUMA: return "Kazuma, the cunning Adventurer, who always finds a way to defeat his foes. You deal an extra <Level> amount of unmitigated damage everytime you win when Kazuma is in the front line.";
+                case Player::MODE_AQUA: return "Aqua, the Goddess of Water (who also happens to be an Arch Priest). You recover <Level> amount of HP at the start of each turn when Aqua is in the front line.";
+                case Player::MODE_MEGUMIN: return "Megumin, the Explosion crazed Arch Wizard. Explosions do 5x more damage and pierces defense when Megumin is in the front line.";
+                case Player::MODE_DARKNESS: return "Darkness, the masochistic Crusader who only knows how to tank. Gain 90% damage reduction, but deal no damage when Darkness is in the front line.";
+                default: return "huh? who the hell's this?";
             }
         }
 

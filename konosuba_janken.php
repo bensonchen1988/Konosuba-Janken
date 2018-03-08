@@ -190,7 +190,18 @@
     }
 
     if(isset($_POST["avatar_select"])){
+    	$old_avatar = $PlayerCharacter->get_mode();
     	$PlayerCharacter->set_mode($_POST["avatar_select"]);
+    	$new_avatar = $PlayerCharacter->get_mode();
+        if($old_avatar !== $new_avatar){
+            switch($new_avatar){
+                case Player::MODE_KAZUMA: $GLOBALS["console_output_buffer"] .= "Kazuma cautiously crawls to the front line."; break;
+                case Player::MODE_AQUA: $GLOBALS["console_output_buffer"] .= "Aqua reluctantly gets dragged to the front line."; break;
+                case Player::MODE_MEGUMIN: $GLOBALS["console_output_buffer"] .= "Megumin walks confidently to the front line, eager to show off her Explosion magic."; break;
+                case Player::MODE_DARKNESS: $GLOBALS["console_output_buffer"] .= "Darkness practically flies to the front line to receive abuse."; break;
+                default: return "huh? who the hell's this?";
+            }
+        }
     }
 
     if(isset($_POST["farm"])){
@@ -513,10 +524,10 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
     ?>
 	<form action="konosuba_janken.php" method="post">
 	    <select id="avatar_select" name="avatar_select"> 
-	        <option value = 0>Kazuma</option>
-	        <option value = 1>Aqua</option>
-	        <option value = 2>Megumin</option>
-	        <option value = 3>Darkness</option>
+	        <option value = 0 <?php if($PlayerCharacter->get_mode() === Player::MODE_KAZUMA) echo "selected"; ?>>Kazuma</option>
+	        <option value = 1 <?php if($PlayerCharacter->get_mode() === Player::MODE_AQUA) echo "selected"; ?>>Aqua</option>
+	        <option value = 2 <?php if($PlayerCharacter->get_mode() === Player::MODE_MEGUMIN) echo "selected"; ?>>Megumin</option>
+	        <option value = 3 <?php if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS) echo "selected"; ?>>Darkness</option>
 	    <input type="submit" value="Change Front Line">
 	    </select>
 	</form>

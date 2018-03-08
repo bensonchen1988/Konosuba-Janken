@@ -57,3 +57,24 @@ class CabbageLeaf extends Armor
         return CabbageLeaf::ID;
     }
 }
+
+
+class DeadlySlimeArmor extends Armor
+{
+    const ID = 200002;
+
+    public function get_def()
+    {
+        return 20;
+    }
+
+    public function get_name()
+    {
+        return "Deadly Slime Armor";
+    }
+
+    public function get_id()
+    {
+        return DeadlySlimeArmor::ID;
+    }
+}

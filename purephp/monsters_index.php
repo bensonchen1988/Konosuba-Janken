@@ -1,4 +1,5 @@
 <?php
+require_once("monsters.php");
 // ID => ClassName
 function get_monster_index()
 {

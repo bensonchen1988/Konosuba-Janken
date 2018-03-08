@@ -31,6 +31,7 @@ require_once("accessory_effects.php");
             // Apply weapon bonus (if any)
             if($PlayerCharacter->has_weapon()){
                 $attacker->bonus_atk += $PlayerCharacter->get_weapon()->get_atk();
+                $attacker->crit += $PlayerCharacter->get_weapon()->get_crit();
             }
 
             $defender->def = $Monster->get_def();
@@ -62,8 +63,8 @@ require_once("accessory_effects.php");
 
             // Darkness nerf
             if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS){
-                $damage = floor($damage*0.2);
-                $GLOBALS["console_output_buffer"] .= "\nDarkness debuff: -80% damage dealt!";
+                $damage = 0;
+                $GLOBALS["console_output_buffer"] .= "\nDarkness debuff: Your attack missed!";
             }
             $GLOBALS["console_output_buffer"] .= " You did " . $damage ." damage!";
             // Kazuma bonus, deals current level amount of extra unmitigated damage
@@ -106,7 +107,7 @@ require_once("accessory_effects.php");
             $damage = max(1, $attacker->get_total_atk() - $defender->def);
             // Darkness buff
             if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS){
-                $damage = max(1, floor($damage*0.2));
+                $damage = max(1, floor($damage*0.1));
                 $GLOBALS["console_output_buffer"] .= "\nDarkness buff: -80% damage received!";
             }
 

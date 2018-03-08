@@ -1,8 +1,6 @@
 <?php
 
-require_once("weapons.php");
-require_once("accessories.php");
-require_once("armors.php");
+require_once("equipment_index.php");
 
 /**
 Factory class for creating equipments
@@ -17,6 +15,13 @@ class EquipmentFactory
     * All equipments implement the interface Equipment.
     **/
     function get_equipment($equipment_id){
+        $equipment_index = get_equipment_index();
+
+        if(!array_key_exists($equipment_id, $equipment_index)){
+            return new Unequipped();
+        }
+        return new $equipment_index[$equipment_id]();
+        /*
         switch($equipment_id){
             // Weapons
             case BrassKnuckles::ID: return new BrassKnuckles();
@@ -32,6 +37,7 @@ class EquipmentFactory
             case TrueSoDamageMuchWowSuchOP::ID: return new TrueSoDamageMuchWowSuchOP();
             default: return new Unequipped();
         }
+        */
     }
 }
 
