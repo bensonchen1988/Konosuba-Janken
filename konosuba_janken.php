@@ -314,6 +314,7 @@ echo ">";
                 // Loot Check
                 if(sizeof($Monster->get_loots()) > 0){
                     foreach($Monster->get_loots() as $id){
+                        $PlayerCharacter->add_inventory($id);
                         $KonosubaDB->add_inventory($_SESSION["user"], $id);
                         $equipment = $EquipmentFactory->get_equipment($id);
                         $GLOBALS["console_output_buffer"] .= "\nYou got a " . $equipment->get_name() . "!";
