@@ -33,7 +33,7 @@
 </head>
 <body>  
 <h1> Konosuba Rock Paper Scissors! </h1>
-Logged in as : <?php echo $_SESSION["user"]; ?>
+<h3>Logged in as: <?php echo $_SESSION["user"]; ?></h3>
 
 <!-- Javascript help for some sweet audio! -->
 <!-- Plays an audio file selected at random from the list below when the user hovers their mouse over the Explosion image -->
@@ -136,8 +136,9 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
     <source src="sounds/truepower.mp3" type="audio/mpeg">
 </audio>
 
+
 <form action="konosuba_janken.php" method="post">
-    <input type="submit" name="reset" value="Reset Game">
+<input type="submit" name="logout" value="Logout">
 </form>
 
 <form action="konosuba_janken.php" method="post">
@@ -177,6 +178,7 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
         $PlayerCharacter->set_accessory($EquipmentFactory->get_equipment($game_state["player_accessory"]));
         $Monster = $MonsterFactory->create_monster_by_id($game_state["monster_id"]);
         $Monster->set_current_hp($game_state["monster_current_hp"]);
+        $PlayerCharacter->set_mode($game_state["player_avatar"]);
         
         $player_lose_streak =$game_state["player_lose_streak"];
         $player_stored_nukes = $game_state["player_stored_nukes"];
@@ -187,6 +189,9 @@ Logged in as : <?php echo $_SESSION["user"]; ?>
         $farm_mode = $game_state["farm_mode"];
     }
 
+    if(isset($_POST["avatar_select"])){
+    	$PlayerCharacter->set_mode($_POST["avatar_select"]);
+    }
 
     if(isset($_POST["farm"])){
         $farm_mode = ($farm_mode - 1) * -1;
@@ -294,6 +299,7 @@ echo ">";
 
     // Proceed with the game and combat if a valid player input is received
     if($player_input >= 0 && $player_input <= 3){
+    	$GameLogic->process_turn_based_effects($PlayerCharacter, $Monster);
         $choices = array("Rock", "Paper", "Scissors", "EXPLOSION");
         // Generate Monster choice. Different monsters may have unique choice patterns.
         $computer_choice = $Monster->get_choice($cpu_stored_nukes>0);
@@ -313,8 +319,15 @@ echo ">";
             if($monster_current_hp <= 0){
                 // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
                 // Award exp and level up if possible
+                $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!";
                 $exp_awarded = $Monster->get_exp();
+                $GLOBALS["console_output_buffer"] .= "\nYou gained " . $exp_awarded . " EXP!";
+                $old_level = $PlayerCharacter->get_level();
                 $PlayerCharacter->gain_exp($exp_awarded);
+                $new_level = $PlayerCharacter->get_level();
+                if($new_level > $old_level){
+                	$GLOBALS["console_output_buffer"] .= "\nYou leveled up from " . $old_level . " to " . $new_level . "!";
+                }
                 // HP regen award for killing monster
                 $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp()+$GameLogic->get_kill_hp_regen($Monster));
                 // Loot Check
@@ -326,7 +339,6 @@ echo ">";
                         $GLOBALS["console_output_buffer"] .= "\nYou got a " . $equipment->get_name() . "!";
                     }
                 }
-                $GLOBALS["console_output_buffer"] .= "\n" . $Monster->get_name() . " died!\n";
                 // Change monster
                 if($farm_mode == 1){
                     $Monster = $MonsterFactory->create_monster_by_id($Monster->get_id());
@@ -369,12 +381,15 @@ echo ">";
 ?>  
 
 <?php
-    // Store game state into DB
-    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode);
+    /*******************************************************
+	Store game state into DB
+    ********************************************************/ 
+    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $PlayerCharacter->get_mode());
 
 ?>
 
-<img src = <?php echo "\"images/" . $Monster->get_name() . ".jpg\"";?> height = "300" width = "400" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
+<img src = <?php echo "\"images/" . $Monster->get_name() . ".jpg\"";?> height = "200" width = "300" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
+
 <br>
 <?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
 <br>
@@ -384,17 +399,17 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
 <table>
     <form action="konosuba_janken.php" method="POST" id = "rock_input">
         <input type="hidden" name="player_input" value="0">
-        <input type="image" src="images/rock.jpg" height="200" width="200">
+        <input type="image" src="images/rock.jpg" height="150" width="150">
     </form>
 
     <form action="konosuba_janken.php" method="POST" id = "paper_input">
         <input type="hidden" name="player_input" value="1">
-        <input type="image" src="images/paper.jpg" height="200" width="200">
+        <input type="image" src="images/paper.jpg" height="150" width="150">
     </form>
 
     <form action="konosuba_janken.php" method="POST" id = "scissors_input">
         <input type="hidden" name="player_input" value="2">
-        <input type="image" src="images/scissors.jpg" height="200" width="200">
+        <input type="image" src="images/scissors.jpg" height="150" width="150">
     </form>
 
 
@@ -406,7 +421,7 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
          if($temp_nukes > 0){
             echo '<form action="konosuba_janken.php" method="POST" id = "explosion_input">
                 <input type="hidden" name="player_input" value="3">
-                <input type="image" src="images/explosion.gif" height="200" width="200" onmouseover="explosion_sound()" onmouseout="explosion_sound_stop()">
+                <input type="image" src="images/explosion.gif" height="150" width="150" onmouseover="explosion_sound()" onmouseout="explosion_sound_stop()">
                 </form>';
          }
     ?>
@@ -484,7 +499,30 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
 </table>
 
     <?php
-        echo "You: Level " . $PlayerCharacter->get_level();
+    	$avatar = "Kazuma";
+        switch($PlayerCharacter->get_mode()){
+        	case 0: $avatar = "Kazuma"; break;
+        	case 1: $avatar = "Aqua"; break;
+        	case 2: $avatar = "Megumin"; break;
+        	case 3: $avatar = "Darkness"; break;
+        	default: $avatar = "Kazuma";
+        }
+        echo '<img src="images/';
+        echo $avatar;
+        echo '.jpg" height="200" width="300" title = "'.$PlayerCharacter->get_avatar_description().'"> ';
+    ?>
+	<form action="konosuba_janken.php" method="post">
+	    <select id="avatar_select" name="avatar_select"> 
+	        <option value = 0>Kazuma</option>
+	        <option value = 1>Aqua</option>
+	        <option value = 2>Megumin</option>
+	        <option value = 3>Darkness</option>
+	    <input type="submit" value="Change Front Line">
+	    </select>
+	</form>
+    <?php
+
+        echo "You: Level " . $PlayerCharacter->get_level() . ", Front Line: " . $avatar;
         echo "<br>";
         echo "HP: " . $PlayerCharacter->get_current_hp() . "/" . $PlayerCharacter->get_hp();
         echo ", ";
@@ -514,10 +552,10 @@ textarea{
 <br> Computer's Explosions available: <?php echo $cpu_stored_nukes ?>
 <br> Computer's total wins: <?php echo $cpu_wins ?>
 
-<form action="konosuba_janken.php" method="post">
-<input type="submit" name="logout" value="Logout">
-</form>
 
+<form action="konosuba_janken.php" method="post">
+    <input type="submit" name="reset" value="Reset Game">
+</form>
 <?php 
     ob_end_flush();
 ?>

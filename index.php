@@ -8,7 +8,6 @@ session_start()
 <html>  
 </head>
 <body>  
-
 <form action="login_action.php" method = "post">
 Username<br>
 <input type="text" name="username" maxlength = "15" required = "required" pattern = "^[a-zA-Z0-9_]*$">

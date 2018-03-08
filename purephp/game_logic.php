@@ -40,6 +40,15 @@ require_once("accessory_effects.php");
                 $this->apply_effects($PlayerCharacter->get_accessory()->get_effects(), $attacker);
             }
 
+
+            // Megumin Explosion bonus
+            if($PlayerCharacter->get_mode() === Player::MODE_MEGUMIN && $PlayerCharacter->get_input() === 3){
+                $GLOBALS["console_output_buffer"] .= "\nMegumin Explosion bonus: 5X Damage and defense pierce!";
+                $attacker->base_atk = $attacker->base_atk*5;
+                $attacker->bonus_atk = $attacker->bonus_atk*5;
+                $defender->def = 0;
+            }
+
             // Calculate crit. Crits do a default of 2X total damage at the moment, considering expanding to allow Accessories to modify this multiplier
             $crit_roll = rand(1,100);
             if($crit_roll <= $attacker->crit){
@@ -50,7 +59,19 @@ require_once("accessory_effects.php");
             }
             // Deals a minimum of 1 damage
             $damage = max(1, $attacker->get_total_atk() - $defender->def);
+
+            // Darkness nerf
+            if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS){
+                $damage = floor($damage*0.2);
+                $GLOBALS["console_output_buffer"] .= "\nDarkness debuff: -80% damage dealt!";
+            }
             $GLOBALS["console_output_buffer"] .= " You did " . $damage ." damage!";
+            // Kazuma bonus, deals current level amount of extra unmitigated damage
+            if($PlayerCharacter->get_mode() === Player::MODE_KAZUMA){
+                $GLOBALS["console_output_buffer"] .= "\nKazuma bonus: You did " . $PlayerCharacter->get_level() ." extra damage!";
+                $damage += $PlayerCharacter->get_level();
+            }
+
             return $damage;
 
         }
@@ -83,6 +104,12 @@ require_once("accessory_effects.php");
                 $GLOBALS["console_output_buffer"] .= "\nCRITICAL STRIKE!";
             }
             $damage = max(1, $attacker->get_total_atk() - $defender->def);
+            // Darkness buff
+            if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS){
+                $damage = max(1, floor($damage*0.2));
+                $GLOBALS["console_output_buffer"] .= "\nDarkness buff: -80% damage received!";
+            }
+
             $GLOBALS["console_output_buffer"] .= "\nYou took " . $damage ." damage!";
             return $damage;
 
@@ -196,6 +223,18 @@ require_once("accessory_effects.php");
                 case AccessoryEffects::TYPE_SCISSORS_ATTACK_BOOST:if($CombatData->input == 2){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
                 case AccessoryEffects::TYPE_EXPLOSION_ATTACK_BOOST:if($CombatData->input == 3){$CombatData->base_atk = $CombatData->base_atk * $AccessoryEffects->get_multiplier();} break;
                 default: break;
+            }
+        }
+
+        public function process_turn_based_effects(Player $PlayerCharacter, Monster $Monster){
+            // Aqua regen
+            $this->aqua_regen($PlayerCharacter);
+        }
+
+        private function aqua_regen(Player $PlayerCharacter){
+            if($PlayerCharacter->get_mode() === Player::MODE_AQUA){
+                $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() + $PlayerCharacter->get_level());
+                $GLOBALS["console_output_buffer"] .= "You recovered " . $PlayerCharacter->get_level() . " HP with Aqua's blessing!\n";
             }
         }
 

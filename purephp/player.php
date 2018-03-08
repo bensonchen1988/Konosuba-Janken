@@ -4,6 +4,13 @@ require_once("equipment.php");
 
     class Player{
 
+        // Character Mode: 0: Kazuma (default), 1: Aqua, 2: Megumin, 3: Darkness
+        const MODE_KAZUMA = 0;
+        const MODE_AQUA = 1;
+        const MODE_MEGUMIN = 2;
+        const MODE_DARKNESS = 3;
+        private $character_mode = 0;
+
         private $current_level;
         private $current_exp;
         private $current_hp;
@@ -30,6 +37,24 @@ require_once("equipment.php");
             $this->equipped_armor = $unequipped;
             $this->equipped_accessory = $unequipped;
             
+        }
+
+        function get_avatar_description(){
+            switch($this->character_mode){
+                case 0: return "Kazuma, the cunning Adventurer, who always finds a way to defeat his foes. You deal an extra <Level> amount of unmitigated damage everytime you win when Kazuma is in the front line.";
+                case 1: return "Aqua, the Arch Priest, who is also the Goddess of Water. You recover <Level> amount of HP at the start of each turn when Aqua is in the front line.";
+                case 2: return "Megumin, the Explosion crazed Arch Wizard. Explosions do 5x more damage and pierces defense when Megumin is in the front line.";
+                case 3: return "Darkness, the masochistic Crusader. Gain 80% damage reduction, but deal 80% less damage when Darkness is in the front line.";
+                default: return "huh?";
+            }
+        }
+
+        function get_mode(){
+            return $this->character_mode;
+        }
+
+        function set_mode(int $mode){
+            $this->character_mode = $mode;
         }
 
         function has_weapon()
@@ -115,7 +140,8 @@ require_once("equipment.php");
 
         function set_current_hp(int $hp)
         {
-            $this->current_hp = $hp;
+            // prevent hp overcap
+            $this->current_hp = min($hp, $this->get_hp());
         }
 
         function get_current_hp()
