@@ -34,6 +34,56 @@ final class KonosubaDB
 	public function __construct()
 	{
 		$this->connection = Connection::get_connection();
+		$this->safe_create_required_tables();
+	}
+
+	private function safe_create_required_tables()
+	{
+		// safe create tables for new enviroment setup
+		// Game State
+		$game_state = "CREATE TABLE IF NOT EXISTS `game_state` (
+ `username` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
+ `player_level` int(11) NOT NULL DEFAULT '1',
+ `player_exp` int(11) NOT NULL DEFAULT '0',
+ `player_weapon` int(11) NOT NULL,
+ `player_armor` int(11) NOT NULL,
+ `player_accessory` int(11) NOT NULL,
+ `player_current_hp` int(11) NOT NULL,
+ `monster_current_hp` int(11) NOT NULL,
+ `monster_id` int(11) NOT NULL,
+ `player_lose_streak` int(11) NOT NULL DEFAULT '0',
+ `player_stored_nukes` int(11) NOT NULL DEFAULT '0',
+ `player_wins` int(11) NOT NULL DEFAULT '0',
+ `monster_lose_streak` int(11) NOT NULL DEFAULT '0',
+ `monster_stored_nukes` int(11) NOT NULL DEFAULT '0',
+ `monster_wins` int(11) NOT NULL DEFAULT '0',
+ `farm_mode` int(11) NOT NULL DEFAULT '0',
+ PRIMARY KEY (`username`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+		$PS_game_state = $this->connection->prepare($game_state);
+		$PS_game_state->execute();
+
+		// User Login
+		$user_login = "CREATE TABLE IF NOT EXISTS`user_login` (
+ `username` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
+ `password_encrypted` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+ `last_login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY (`username`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+		$PS_user_login = $this->connection->prepare($user_login);
+		$PS_user_login->execute();
+
+		// Player Inventory
+		$player_inventory = "CREATE TABLE IF NOT EXISTS `player_inventory` (
+ `username` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
+ `equipment_id` int(11) NOT NULL,
+ `count` int(11) NOT NULL DEFAULT '1',
+ PRIMARY KEY (`username`,`equipment_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+        $PS_player_inventory = $this->connection->prepare($player_inventory);
+        $PS_player_inventory->execute();
+
+
 	}
 
 	public function record_game_state($username, $player_level, $player_exp, $player_weapon, $player_armor, $player_accessory, $player_current_hp, $monster_current_hp, $monster_id, $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode)
