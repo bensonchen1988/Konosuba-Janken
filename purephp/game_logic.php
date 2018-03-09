@@ -6,15 +6,37 @@ require_once("accessory_effects.php");
 
     class GameLogic
     {
+        // Available choices
+        const ROCK = 0;
+        const PAPER = 1;
+        const SCISSORS = 2;
+        const EXPLOSION = 3;
+
         // Lose streak threshold to receive an Explosion charge
         private $lose_streak_to_get_explosion = 3;
+
+        // Death exp penalty rate
+        private $exp_penalty_rate = 0.2;
 
         /**
         * Returns the percentage in decimal form of EXP loss upon dying
         **/
         function get_exp_penalty_rate()
         {
-            return 0.2;
+            return $this->exp_penalty_rate;
+        }
+
+        /**
+        * Returns an array containing the rules of what beats what
+        **/
+        private function get_rules(){
+            // Key: the choice, Value: Array of choices that key beats
+            return array(
+                self::ROCK => array(self::SCISSORS),
+                self::PAPER => array(self::ROCK),
+                self::SCISSORS => array(self::PAPER),
+                self::EXPLOSION => array(self::SCISSORS, self::ROCK, self::PAPER)
+            );
         }
 
         /**
@@ -69,8 +91,8 @@ require_once("accessory_effects.php");
             $GLOBALS["console_output_buffer"] .= " You did " . $damage ." damage!";
             // Kazuma bonus, deals current level amount of extra unmitigated damage
             if($PlayerCharacter->get_mode() === Player::MODE_KAZUMA){
-                $GLOBALS["console_output_buffer"] .= "\nKazuma bonus: You did " . $PlayerCharacter->get_level() ." extra damage!";
-                $damage += $PlayerCharacter->get_level();
+                $GLOBALS["console_output_buffer"] .= "\nKazuma bonus: You did " . $PlayerCharacter->get_atk() ." extra damage!";
+                $damage += $PlayerCharacter->get_atk();
             }
 
             return $damage;
@@ -108,7 +130,7 @@ require_once("accessory_effects.php");
             // Darkness buff
             if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS){
                 $damage = max(1, floor($damage*0.1));
-                $GLOBALS["console_output_buffer"] .= "\nDarkness buff: -80% damage received!";
+                $GLOBALS["console_output_buffer"] .= "\nDarkness buff: -90% damage received!";
             }
 
             $GLOBALS["console_output_buffer"] .= "\nYou took " . $damage ." damage!";
@@ -137,26 +159,25 @@ require_once("accessory_effects.php");
             if($player_input == -1){
                 return "e";
             }
+
+            $rules = $this->get_rules();
+            $player = in_array($computer_choice, $rules[$player_input]) ? 1 : 0;
+            $computer = in_array($player_input, $rules[$computer_choice]) ? 1 : 0;
+            $result = $player - $computer;
+
             // Tie Game
-            if($computer_choice === $player_input){
+            if($result === 0){
                 $GLOBALS["console_output_buffer"] .= "DRAW GAME!";
                 return "d";
             }
-            // Explosion win check
-            if($player_input == 3 || $computer_choice == 3){
-                if($player_input == 3){
-                    $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $monster_name);
-                    return "p";
-                }
-                $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $monster_name, "You");
-                return "c";
-            }
             // Normal win check
-            if(($player_input+1)%3 == $computer_choice){
+            if($result < 0){
+                // Computer Win
                 $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $monster_name, "You");
                 return "c";
             }
             else{
+                // Player Win
                 $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $monster_name);
                 return "p";
             }
@@ -234,8 +255,8 @@ require_once("accessory_effects.php");
 
         private function aqua_regen(Player $PlayerCharacter){
             if($PlayerCharacter->get_mode() === Player::MODE_AQUA){
-                $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() + $PlayerCharacter->get_level());
-                $GLOBALS["console_output_buffer"] .= "You recovered " . $PlayerCharacter->get_level() . " HP with Aqua's blessing!\n";
+                $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() + $PlayerCharacter->get_atk());
+                $GLOBALS["console_output_buffer"] .= "You recovered " . $PlayerCharacter->get_atk() . " HP with Aqua's blessing!\n";
             }
         }
 

@@ -55,6 +55,7 @@
 
     // Auto Battle
     function autoBattleCheckBox(checkbox){
+    	saveScroll();
         if(checkbox.checked){
             localStorage.setItem("autoBattle", "checked");
         }
@@ -87,6 +88,10 @@
             }
         }
     }, 1500);
+    }
+
+    function saveScroll(){
+    	localStorage.setItem("scroll", document.body.scrollTop);
     }
 
 </script>
@@ -137,11 +142,11 @@
 </audio>
 
 
-<form action="konosuba_janken.php" method="post">
+<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
 <input type="submit" name="logout" value="Logout">
 </form>
 
-<form action="konosuba_janken.php" method="post">
+<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
     <select id="monster_select" name="monster_select"> 
         <?php
         $monster_index = get_monster_index();
@@ -190,18 +195,24 @@
     }
 
     if(isset($_POST["avatar_select"])){
-    	$old_avatar = $PlayerCharacter->get_mode();
-    	$PlayerCharacter->set_mode($_POST["avatar_select"]);
-    	$new_avatar = $PlayerCharacter->get_mode();
-        if($old_avatar !== $new_avatar){
-            switch($new_avatar){
-                case Player::MODE_KAZUMA: $GLOBALS["console_output_buffer"] .= "Kazuma cautiously crawls to the front line."; break;
-                case Player::MODE_AQUA: $GLOBALS["console_output_buffer"] .= "Aqua reluctantly gets dragged to the front line."; break;
-                case Player::MODE_MEGUMIN: $GLOBALS["console_output_buffer"] .= "Megumin walks confidently to the front line, eager to show off her Explosion magic."; break;
-                case Player::MODE_DARKNESS: $GLOBALS["console_output_buffer"] .= "Darkness practically flies to the front line to receive abuse."; break;
-                default: return "huh? who the hell's this?";
-            }
-        }
+    	// Special DarknessVanir interaction with MODE_DARKNESS
+    	if($_POST["avatar_select"] == Player::MODE_DARKNESS && $Monster->get_id() === DarknessVanir::ID){
+			$GLOBALS["console_output_buffer"] .= "Darkness is currently possessed by Vanir!";
+		}
+		else{
+	    	$old_avatar = $PlayerCharacter->get_mode();
+	    	$PlayerCharacter->set_mode($_POST["avatar_select"]);
+	    	$new_avatar = $PlayerCharacter->get_mode();
+	        if($old_avatar !== $new_avatar){
+	            switch($new_avatar){
+	                case Player::MODE_KAZUMA: $GLOBALS["console_output_buffer"] .= "Kazuma cautiously crawls to the front line."; break;
+	                case Player::MODE_AQUA: $GLOBALS["console_output_buffer"] .= "Aqua reluctantly gets dragged to the front line."; break;
+	                case Player::MODE_MEGUMIN: $GLOBALS["console_output_buffer"] .= "Megumin walks confidently to the front line, eager to show off her Explosion magic."; break;
+	                case Player::MODE_DARKNESS: $GLOBALS["console_output_buffer"] .= "Darkness practically flies to the front line to receive abuse."; break;
+	                default: $GLOBALS["console_output_buffer"] .=  "huh? who the hell's this?";
+	            }
+	        }
+   	    }
     }
 
     if(isset($_POST["farm"])){
@@ -280,7 +291,7 @@
 ?>
 
 
-<form action="konosuba_janken.php" method="post">
+<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
 <?php 
 echo '<input type="submit" name="farm" value="Farm Mode Is ';
 if($farm_mode == 1){
@@ -379,15 +390,21 @@ echo ">";
                 //$player_current_hp = $GameLogic->get_hp($player_level);
                 $PlayerCharacter->set_current_hp($PlayerCharacter->get_hp());
                 //$player_exp = floor($player_exp * (1-$GameLogic->get_exp_penalty_rate()));
-                $PlayerCharacter->set_exp(floor($PlayerCharacter->get_exp() * (1-$GameLogic->get_exp_penalty_rate())));
+                $lost_exp = floor($PlayerCharacter->get_exp() * $GameLogic->get_exp_penalty_rate());
+                $PlayerCharacter->set_exp($PlayerCharacter->get_exp() - $lost_exp);
 
+                $GLOBALS["console_output_buffer"] .= "You lost " . $lost_exp . " EXP!\n";
                 // Change monster
                 $Monster = $MonsterFactory->create_monster_by_player_level($PlayerCharacter->get_level());
             }
         }
     }
 
-    
+    // Special DarknessVanir with MODE_DARKNESS interaction
+    if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS && $Monster->get_id() === DarknessVanir::ID){
+    	$GLOBALS["console_output_buffer"] .= "Oh no! Darkness got possessed by Vanir!";
+    	$PlayerCharacter->set_mode(Player::MODE_KAZUMA);
+    }
 
 ?>  
 
@@ -408,17 +425,17 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
 <br>
 
 <table>
-    <form action="konosuba_janken.php" method="POST" id = "rock_input">
+    <form action="konosuba_janken.php" method="POST" id = "rock_input" onsubmit = "saveScroll()">
         <input type="hidden" name="player_input" value="0">
         <input type="image" src="images/rock.jpg" height="150" width="150">
     </form>
 
-    <form action="konosuba_janken.php" method="POST" id = "paper_input">
+    <form action="konosuba_janken.php" method="POST" id = "paper_input" onsubmit = "saveScroll()">
         <input type="hidden" name="player_input" value="1">
         <input type="image" src="images/paper.jpg" height="150" width="150">
     </form>
 
-    <form action="konosuba_janken.php" method="POST" id = "scissors_input">
+    <form action="konosuba_janken.php" method="POST" id = "scissors_input" onsubmit = "saveScroll()">
         <input type="hidden" name="player_input" value="2">
         <input type="image" src="images/scissors.jpg" height="150" width="150">
     </form>
@@ -430,7 +447,7 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
             --$temp_nukes;
          }
          if($temp_nukes > 0){
-            echo '<form action="konosuba_janken.php" method="POST" id = "explosion_input">
+            echo '<form action="konosuba_janken.php" method="POST" id = "explosion_input" onsubmit = "saveScroll()">
                 <input type="hidden" name="player_input" value="3">
                 <input type="image" src="images/explosion.gif" height="150" width="150" onmouseover="explosion_sound()" onmouseout="explosion_sound_stop()">
                 </form>';
@@ -479,7 +496,7 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
         }
     ?>
 
-    <form action="konosuba_janken.php" method="post">
+    <form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
     <select id="weapon_select" name="weapon_select"> 
         <option value = -1>--Choose Weapon--</option>
         <?php
@@ -522,7 +539,7 @@ HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>
         echo $avatar;
         echo '.jpg" height="200" width="300" title = "'.$PlayerCharacter->get_avatar_description().'"> ';
     ?>
-	<form action="konosuba_janken.php" method="post">
+	<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
 	    <select id="avatar_select" name="avatar_select"> 
 	        <option value = 0 <?php if($PlayerCharacter->get_mode() === Player::MODE_KAZUMA) echo "selected"; ?>>Kazuma</option>
 	        <option value = 1 <?php if($PlayerCharacter->get_mode() === Player::MODE_AQUA) echo "selected"; ?>>Aqua</option>
@@ -564,11 +581,17 @@ textarea{
 <br> Computer's total wins: <?php echo $cpu_wins ?>
 
 
-<form action="konosuba_janken.php" method="post">
+<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
     <input type="submit" name="reset" value="Reset Game">
 </form>
 <?php 
     ob_end_flush();
 ?>
+<script type="text/javascript">
+	if(localStorage.getItem("scroll") !== null){
+		document.body.scrollTop = localStorage.getItem("scroll");
+		document.documentElement.scrollTop = localStorage.getItem("scroll");
+	}
+</script>
 </body>  
 </html>  

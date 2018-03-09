@@ -14,6 +14,7 @@ function get_equipment_index()
             FrogSkin::ID => "FrogSkin",
             CabbageLeaf::ID => "CabbageLeaf",
             DeadlySlimeArmor::ID => "DeadlySlimeArmor",
+            UselessDirt::ID => "UselessDirt",
             // Accessories
             LuckyPebbles::ID => "LuckyPebbles",
             RockAmulet::ID => "RockAmulet",

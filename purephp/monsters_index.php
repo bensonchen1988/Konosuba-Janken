@@ -11,6 +11,8 @@ function get_monster_index()
     Destroyer::ID => "Destroyer",
     Hanz::ID => "Hanz",
     WinterGeneral::ID => "WinterGeneral",
+    Vanir::ID => "Vanir",
+    DarknessVanir::ID => "DarknessVanir",
     TrainingDummy::ID => "TrainingDummy"
     );
 }

@@ -78,3 +78,23 @@ class DeadlySlimeArmor extends Armor
         return DeadlySlimeArmor::ID;
     }
 }
+
+class UselessDirt extends Armor
+{
+    const ID = 200003;
+
+    public function get_def()
+    {
+        return 0;
+    }
+
+    public function get_name()
+    {
+        return "Useless Dirt";
+    }
+
+    public function get_id()
+    {
+        return self::ID;
+    }
+}

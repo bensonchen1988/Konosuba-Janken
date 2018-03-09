@@ -67,15 +67,47 @@ require_once("monsters_index.php");
         **/ 
         function create_monster_by_player_level($player_level)
         {
-            switch($player_level){
-                case 1: return new GiantFrog();
-                case 2: return new FlyingCabbage();
-                case 3: return new DullahansUndeads();
-                case 4: return new Dullahan();
-                case 5: return new Destroyer();
-                case 6: $arr = array(new Hanz(), new WinterGeneral()); return $arr[array_rand($arr)];
-                default: $arr = array(new Hanz(), new WinterGeneral()); return $arr[array_rand($arr)]; //Catch all for overleveled players for now
+            if($player_level === 1){
+                return new GiantFrog();
             }
+            if($player_level === 2){
+                return new FlyingCabbage();
+            }
+            if($player_level === 3){
+                return new DullahansUndeads();
+            }
+            if($player_level === 4){
+                return new Dullahan();
+            }
+            if($player_level === 5){
+                return new Destroyer();
+            }
+            if($player_level >= 6 && $player_level < 10){
+                $arr = array(new Hanz(), new WinterGeneral()); 
+                return $arr[array_rand($arr)];
+            }
+            if($player_level >= 10 && $player_level < 20){
+                return new Vanir();
+            }
+            if($player_level >= 20){
+                return new DarknessVanir();
+            }
+            return new TrainingDummy();
+            /**
+            switch($player_level){
+                case 10: return new Vanir();
+                case 9:
+                case 8:
+                case 7:
+                case 6: $arr = array(new Hanz(), new WinterGeneral()); return $arr[array_rand($arr)];
+                case 5: return new Destroyer();
+                case 4: return new Dullahan();
+                case 3: return new DullahansUndeads();
+                case 2: return new FlyingCabbage();
+                case 1: return new GiantFrog();
+                default: return new Vanir(); //Catch all for overleveled players for now
+            }
+            **/
         }
 
         /**
@@ -245,17 +277,17 @@ require_once("monsters_index.php");
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(LuckyPebbles::ID=>10000);
         }
-        function get_id()
-        {
-            return DullahansUndeads::ID;
-        }
         function get_level()
         {
             return 3;
         }
+        function get_id()
+        {
+            return self::ID;
+        }
         function get_name()
         {
-            return "Dullahan's Undeads";
+            return self::NAME;
         }
         function get_atk()
         {
@@ -495,6 +527,100 @@ require_once("monsters_index.php");
         function get_description()
         {
             return "The personification of the harsh winter cold.";
+        }
+    }
+
+    class Vanir extends Monster
+    {
+        const ID = 108;
+        const NAME = "Vanir";
+        function __construct()
+        {
+            $this->current_hp = $this->get_hp();
+            $this->loot_table = array(UselessDirt::ID => 10000);
+        }
+        function get_id()
+        {
+            return self::ID;
+        }
+        function get_level()
+        {
+            return 10;
+        }
+        function get_name()
+        {
+            return self::NAME;
+        }
+        function get_atk()
+        {
+            return 666;
+        }
+        function get_def()
+        {
+            return 6666;
+        }
+        function get_hp()
+        {
+            return 6666;
+        }
+        function get_exp()
+        {
+            return 6666;
+        }
+        function get_crit()
+        {
+            return 66;
+        }
+        function get_description()
+        {
+            return "The master troll, this demon feeds upon the negative emotions of humans such as embarrassment and frustration.";
+        }
+    }
+
+    class DarknessVanir extends Monster
+    {
+        const ID = 109;
+        const NAME = "Darkness (Vanir Possessed)";
+        function __construct()
+        {
+            $this->current_hp = $this->get_hp();
+            $this->loot_table = array(UselessDirt::ID => 10000);
+        }
+        function get_id()
+        {
+            return self::ID;
+        }
+        function get_level()
+        {
+            return 20;
+        }
+        function get_name()
+        {
+            return self::NAME;
+        }
+        function get_atk()
+        {
+            return 6666;
+        }
+        function get_def()
+        {
+            return 66666;
+        }
+        function get_hp()
+        {
+            return 666666;
+        }
+        function get_exp()
+        {
+            return 66666;
+        }
+        function get_crit()
+        {
+            return 66;
+        }
+        function get_description()
+        {
+            return "Oh no! Vanir has possessed Darkness! She seems to be enjoying herself though...";
         }
     }
 
