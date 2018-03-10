@@ -55,7 +55,6 @@
 
     // Auto Battle
     function autoBattleCheckBox(checkbox){
-    	saveScroll();
         if(checkbox.checked){
             localStorage.setItem("autoBattle", "checked");
         }
@@ -68,6 +67,7 @@
     function doAutoBattle(){
         setTimeout(function () {
         if(localStorage.getItem("autoBattle") == "checked"){
+    		saveScroll();
             var random = Math.floor(Math.random() * 3);
             if(document.getElementById("explosion_input") !== null){
                 random = Math.floor(Math.random() * 4); // 0 ~ 3
