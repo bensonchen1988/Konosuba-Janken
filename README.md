@@ -39,9 +39,10 @@ Checking the Auto Battle checkbox will make the game randomly send an available 
 
 Toggling Farm Mode to On lets you continously fight the same monster over and over again. Use case: farming for rare drops, such wow much synergy very auto.
 
+Front Line characters have been implemented! Choose from Kazuma, Aqua, Megumin, and Darkness for special passives! Hover your mouse over their images to read what they do! (Hover to be implemented for mobile devices)
+
 Future features:  
 
 -Randomize encounters to be within a range of player level  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
 -Single use items  
--Player Characters (Kazuma, Aqua, Megumin, Darkness), each with their own special passives (eg. Aqua regens HP per turn, Megumin does 10x damage on Explosion, Darkness has 80% damage reduction but only 20% atk power ... etc)
