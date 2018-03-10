@@ -89,6 +89,7 @@ final class KonosubaDB
 
 	public function record_game_state($username, $player_level, $player_exp, $player_weapon, $player_armor, $player_accessory, $player_current_hp, $monster_current_hp, $monster_id, $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $player_avatar)
 	{
+		$this->validate_username($username);
 		// Input mapping
 		$input = array(":username" => $username, ":player_level" => $player_level, ":player_exp" => $player_exp, ":player_weapon" => $player_weapon, ":player_armor" => $player_armor, ":player_accessory" => $player_accessory, ":player_current_hp" => $player_current_hp, ":monster_current_hp" => $monster_current_hp, ":monster_id" => $monster_id, ":player_lose_streak" => $player_lose_streak, ":player_stored_nukes" => $player_stored_nukes, ":player_wins" => $player_wins, ":monster_lose_streak" => $cpu_lose_streak, ":monster_stored_nukes" => $cpu_stored_nukes, ":monster_wins" => $cpu_wins, ":farm_mode" => $farm_mode, ":player_avatar" => $player_avatar);
 		// Check if username record exist
@@ -108,6 +109,7 @@ final class KonosubaDB
 
 	public function get_game_state($username)
 	{
+		$this->validate_username($username);
 		$PS = $this->connection->prepare("select * from game_state where username = :username");
 		$PS->execute(array(":username" => $username));
 		return $PS->fetch();
@@ -115,6 +117,7 @@ final class KonosubaDB
 
 	public function get_login($username)
 	{
+		$this->validate_username($username);
 		$PS = $this->connection->prepare("select * from user_login where username = :username");
 		$PS->execute( array(":username" => $username));
 		return $PS->fetch();
@@ -122,18 +125,22 @@ final class KonosubaDB
 
 	public function sign_up($username, $password)
 	{
+		$this->validate_username($username);
+		$this->validate_username($password);
 		$PS = $this->connection->prepare("insert into user_login (username, password_encrypted) values (:username, :password)");
 		$PS->execute( array(":username" => $username, ":password" => $password));
 	}
 
 	public function get_inventory($username)
 	{
+		$this->validate_username($username);
 		$PS = $this->connection->prepare("select * from player_inventory where username = :username");
 		$PS->execute(array(":username" => $username));
 		return $PS;
 	}
 
 	public function add_inventory($username, $equipment_id){
+		$this->validate_username($username);
 		// Check existence
 		$PS = $this->connection->prepare("select  * from player_inventory where username = :username and equipment_id = :equipment_id");
 		$PS->execute(array(":username" => $username, ":equipment_id" => $equipment_id));
@@ -155,6 +162,58 @@ final class KonosubaDB
 	public function reset_player_inventory($username){
 		$PS = $this->connection->prepare("delete from player_inventory where username = :username");
 		$PS->execute(array(":username" => $username));
+	}
+
+	/**
+	* Throws the hacker back to login page, no hints.
+	**/
+	private function validate_username($username){
+		// Check null
+		if($username === null){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+		// Check if it's a string
+		if(!is_string($username)){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+		// Check length <= 15
+		if(strlen($username) > 15){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+		// Check alphanumeric
+		if(!ctype_alnum($username)){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+	}
+
+	/**
+	* Throws the hacker back to login page, no hints.
+	**/
+	private function validate_password($password){
+		// Check null
+		if($password === null){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+		// Check if it's a string
+		if(!is_string($password)){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+		// Check length <= 15
+		if(strlen($password) > 30){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
+		// Check alphanumeric
+		if(!ctype_alnum($password)){
+    		header("Location: index.php");
+			//throw new Exception("Invalid username");
+		}
 	}
 
 }
