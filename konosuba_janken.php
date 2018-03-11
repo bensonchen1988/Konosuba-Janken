@@ -319,6 +319,12 @@ echo ">";
         $PlayerCharacter->set_input($player_input);
     }
 
+    // Player input validation
+    if($player_input == 3 && $player_stored_nukes < 1){
+        $player_input = -1;
+        $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
+    }
+
     // Proceed with the game and combat if a valid player input is received
     if($player_input >= 0 && $player_input <= 3){
     	$GameLogic->process_turn_based_effects($PlayerCharacter, $Monster);
