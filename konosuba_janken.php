@@ -1,162 +1,26 @@
 <?php
+header('Content-type: application/json');
     require_once("purephp/game_logic.php");
     require_once("purephp/player.php");
     require_once("purephp/monsters.php");
     require_once("purephp/monsters_index.php");
     require_once("purephp/equipment.php");
     require_once("purephp/database.php");
-
     session_start();
+
     if(!isset($_SESSION["user"])){
     $_SESSION["login_message"] = "Please login again";
     header("Location: index.php");
     }
-    // Process logout
-    if(isset($_POST["logout"])){
-    $_SESSION["login_message"] = "Logged out";
-    unset($_SESSION["user"]);
-    header("Location: index.php");
-    }
-
     $GameLogic = new GameLogic();
     $MonsterFactory = new MonsterFactory();
     $EquipmentFactory = new EquipmentFactory();
     $KonosubaDB = new KonosubaDB();
     // Buffer used for aggregating all event logs to output into a textarea at the end of the user to see
     $GLOBALS["console_output_buffer"] = "";
-    ob_start();
+    $GLOBALS["json_response"] = array();
+
 ?>
-
-
-<!DOCTYPE>  
-<html>  
-</head>
-<body>  
-<h1> Konosuba Rock Paper Scissors! </h1>
-<h3>Logged in as: <?php echo $_SESSION["user"]; ?></h3>
-
-<!-- Javascript help for some sweet audio! -->
-<!-- Plays an audio file selected at random from the list below when the user hovers their mouse over the Explosion image -->
-<script type="text/javascript">
-    // Explosion audio
-    var currentMusic;
-    var sounds_list = ["explosion","explosion2","lalala","losion","n","n2","plosion","sion","sion2","thinking","truepower"]
-    function explosion_sound()
-    {
-        currentMusic = document.getElementById(sounds_list[Math.floor(Math.random()*sounds_list.length)]);
-        currentMusic.play();
-    }
-
-    function explosion_sound_stop()
-    {
-        currentMusic.pause();
-        currentMusic.currentTime = 0;
-    }
-
-    // Auto Battle
-    function autoBattleCheckBox(checkbox){
-        if(checkbox.checked){
-            localStorage.setItem("autoBattle", "checked");
-        }
-        else{
-            localStorage.setItem("autoBattle", "unchecked");
-        }
-        doAutoBattle();
-    }
-
-    function doAutoBattle(){
-        setTimeout(function () {
-        if(localStorage.getItem("autoBattle") == "checked"){
-    		saveScroll();
-            var random = Math.floor(Math.random() * 3);
-            if(document.getElementById("explosion_input") !== null){
-                random = Math.floor(Math.random() * 4); // 0 ~ 3
-            }
-            switch(random){
-                case 0: 
-                document.getElementById("rock_input").submit();
-                break;
-                case 1: 
-                document.getElementById("paper_input").submit();
-                break;
-                case 2: 
-                document.getElementById("scissors_input").submit();
-                break;
-                case 3: 
-                document.getElementById("explosion_input").submit();
-                break;
-            }
-        }
-    }, 1500);
-    }
-
-    function saveScroll(){
-    	localStorage.setItem("scroll", document.body.scrollTop);
-    }
-
-</script>
-
-<audio id="explosion">
-    <source src="sounds/explosion.ogg" type="audio/ogg">
-    <source src="sounds/explosion.mp3" type="audio/mpeg">
-</audio>
-<audio id="explosion2">
-    <source src="sounds/explosion2.ogg" type="audio/ogg">
-    <source src="sounds/explosion2.mp3" type="audio/mpeg">
-</audio>
-<audio id="lalala">
-    <source src="sounds/lalala.ogg" type="audio/ogg">
-    <source src="sounds/lalala.mp3" type="audio/mpeg">
-</audio>
-<audio id="losion">
-    <source src="sounds/losion.ogg" type="audio/ogg">
-    <source src="sounds/losion.mp3" type="audio/mpeg">
-</audio>
-<audio id="n">
-    <source src="sounds/n.ogg" type="audio/ogg">
-    <source src="sounds/n.mp3" type="audio/mpeg">
-</audio>
-<audio id="n2">
-    <source src="sounds/n2.ogg" type="audio/ogg">
-    <source src="sounds/n2.mp3" type="audio/mpeg">
-</audio>
-<audio id="plosion">
-    <source src="sounds/plosion.ogg" type="audio/ogg">
-    <source src="sounds/plosion.mp3" type="audio/mpeg">
-</audio>
-<audio id="sion">
-    <source src="sounds/sion.ogg" type="audio/ogg">
-    <source src="sounds/sion.mp3" type="audio/mpeg">
-</audio>
-<audio id="sion2">
-    <source src="sounds/sion2.ogg" type="audio/ogg">
-    <source src="sounds/sion2.mp3" type="audio/mpeg">
-</audio>
-<audio id="thinking">
-    <source src="sounds/thinking.ogg" type="audio/ogg">
-    <source src="sounds/thinking.mp3" type="audio/mpeg">
-</audio>
-<audio id="truepower">
-    <source src="sounds/truepower.ogg" type="audio/ogg">
-    <source src="sounds/truepower.mp3" type="audio/mpeg">
-</audio>
-
-
-<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
-<input type="submit" name="logout" value="Logout">
-</form>
-
-<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
-    <select id="monster_select" name="monster_select"> 
-        <?php
-        $monster_index = get_monster_index();
-        foreach($monster_index as $ID => $CLASSNAME){
-            echo "<option value = " . $ID . ">" . $CLASSNAME::NAME . "</option>";
-        }
-        ?>
-    <input type="submit" value="Change Monster">
-    </select>
-</form>
 
 <?php
     // Load user-specific game state
@@ -290,22 +154,6 @@
     }
 ?>
 
-
-<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
-<?php 
-echo '<input type="submit" name="farm" value="Farm Mode Is ';
-if($farm_mode == 1){
-    echo 'On"';
-}
-else{
-    echo 'Off"';
-}
-echo ">";
-
-?> 
-</form>
-
-
 <?php  
     /**********************************************************************************
     * THIS SECTION IS THE HEART OF THE CARDS, ER, I MEAN GAME
@@ -413,191 +261,50 @@ echo ">";
     }
 
 ?>  
-
+<?php    
+    // 1. Iterate through inventory and call EquipmentFactory->get_equipment($id) on them all 
+    // 2. While iterating and creating, maintain 3 arrays for Weapons, Armors, and Accessories 
+    $weapons_array = array();
+    $armors_array = array();
+    $accessories_array = array();
+    $equipment_names_array = array();
+    foreach($PlayerCharacter->get_inventory() as $id){
+        $item = $EquipmentFactory->get_equipment($id);
+        $equipment_names_array[$id] = $item->get_name(). " - " . $item->get_stats_string();
+        if($item->get_equipment_type() === Equipment::WEAPON){
+            array_push($weapons_array, $id);
+        }
+        else if($item->get_equipment_type() === Equipment::ARMOR){
+            array_push($armors_array, $id);
+        }
+        else{
+            array_push($accessories_array, $id);
+        }
+    }
+?>
 <?php
     /*******************************************************
 	Store game state into DB
     ********************************************************/ 
     $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $PlayerCharacter->get_mode());
 
+
+    /*******************************************************
+    JSON Return
+    ********************************************************/
+    $monster_name_index = array();
+    foreach(get_monster_index() as $ID => $CLASSNAME){
+        $monster_name_index[$ID] = $CLASSNAME::NAME;
+    }
+    $GLOBALS["json_response"]["console"] = $GLOBALS["console_output_buffer"];
+    $GLOBALS["json_response"]["monster"] = array("name" => $Monster->get_name(), "level" => $Monster->get_level(), "current_hp" => $Monster->get_current_hp(), "hp" => $Monster->get_hp(), "atk" => $Monster->get_atk(), "def" => $Monster->get_def(), "crit" => $Monster->get_crit(), "description" => $Monster->get_description());
+    $GLOBALS["json_response"]["player"] = array("level" => $PlayerCharacter->get_level(), "front_line_id" => $PlayerCharacter->get_mode(), "mode_name" => $PlayerCharacter->get_mode_name(), "current_hp" => $PlayerCharacter->get_current_hp(), "hp" => $PlayerCharacter->get_hp(), "atk" => $PlayerCharacter->get_atk(), "def" => $PlayerCharacter->get_def(), "crit" => $PlayerCharacter->get_crit(), "current_exp" => $PlayerCharacter->get_exp(), "required_exp" => $PlayerCharacter->get_required_exp(), "equipped_weapon" => $PlayerCharacter->get_weapon()->get_id(), "equipped_armor" => $PlayerCharacter->get_armor()->get_id(), "equipped_accessory" => $PlayerCharacter->get_accessory()->get_id(), "mode_description" => $PlayerCharacter->get_avatar_description());
+    $GLOBALS["json_response"]["meta_data"] = array("player_lose_streak" => $player_lose_streak, "player_explosions" => $player_stored_nukes, "player_wins" => $player_wins, "monster_lose_streak" => $cpu_lose_streak, "monster_explosions" => $cpu_stored_nukes, "monster_wins" => $cpu_wins);
+    $GLOBALS["json_response"]["farm_mode"] = $farm_mode;
+    $GLOBALS["json_response"]["weapons"] = $weapons_array;
+    $GLOBALS["json_response"]["armors"] = $armors_array;
+    $GLOBALS["json_response"]["accessories"] = $accessories_array;
+    $GLOBALS["json_response"]["equipment_names"] = $equipment_names_array;
+    $GLOBALS["json_response"]["monster_index"] = $monster_name_index;
+    echo json_encode($GLOBALS["json_response"]);
 ?>
-
-<img src = <?php echo "\"images/" . $Monster->get_name() . ".jpg\"";?> height = "200" width = "300" title = <?php echo "\"". $Monster->get_description() ."\""; ?>>
-
-<br>
-<?php echo $Monster->get_name() . ": Level " . $Monster->get_level(); ?>
-<br>
-HP: <?php echo $Monster->get_current_hp(); ?> / <?php echo $Monster->get_hp() ?>,  ATK: <?php echo $Monster->get_atk(); ?>, DEF: <?php echo $Monster->get_def(); ?>, CRIT: <?php echo $Monster->get_crit(); ?>
-<br>
-
-<table>
-    <form action="konosuba_janken.php" method="POST" id = "rock_input" onsubmit = "saveScroll()">
-        <input type="hidden" name="player_input" value="0">
-        <input type="image" src="images/rock.jpg" height="150" width="150">
-    </form>
-
-    <form action="konosuba_janken.php" method="POST" id = "paper_input" onsubmit = "saveScroll()">
-        <input type="hidden" name="player_input" value="1">
-        <input type="image" src="images/paper.jpg" height="150" width="150">
-    </form>
-
-    <form action="konosuba_janken.php" method="POST" id = "scissors_input" onsubmit = "saveScroll()">
-        <input type="hidden" name="player_input" value="2">
-        <input type="image" src="images/scissors.jpg" height="150" width="150">
-    </form>
-
-
-    <?php
-         $temp_nukes = $player_stored_nukes;
-         if($player_input === 3){
-            --$temp_nukes;
-         }
-         if($temp_nukes > 0){
-            echo '<form action="konosuba_janken.php" method="POST" id = "explosion_input" onsubmit = "saveScroll()">
-                <input type="hidden" name="player_input" value="3">
-                <input type="image" src="images/explosion.gif" height="150" width="150" onmouseover="explosion_sound()" onmouseout="explosion_sound_stop()">
-                </form>';
-         }
-    ?>
-
-    <label for="auto_battle_checkbox">Auto Battle</label>
-    <input id="auto_battle_checkbox" type="checkbox" onclick="autoBattleCheckBox(this)">
-
-    <script type="text/javascript">
-        document.getElementById("auto_battle_checkbox").checked = localStorage.getItem("autoBattle") == "checked";
-        doAutoBattle();
-    </script>
-
-
-    <?php    
-        // 1. Iterate through inventory and call EquipmentFactory->get_equipment($id) on them all 
-        // 2. While iterating and creating, maintain 3 arrays for Weapons, Armors, and Accessories 
-        $weapons_array = array();
-        $armors_array = array();
-        $accessories_array = array();
-        foreach($PlayerCharacter->get_inventory() as $id){
-            $item = $EquipmentFactory->get_equipment($id);
-            if($item->get_equipment_type() === Equipment::WEAPON){
-                array_push($weapons_array, $item);
-            }
-            else if($item->get_equipment_type() === Equipment::ARMOR){
-                array_push($armors_array, $item);
-            }
-            else{
-                array_push($accessories_array, $item);
-            }
-        }
-    ?>
-
-    <br>
-
-    <?php
-        // 3. Generate output list for each category 
-        function equipment_list_printer($equipment, $player_equipment){
-            echo "<option ";
-            if($equipment->get_id() == $player_equipment->get_id()){
-                echo "selected ";
-            }
-            echo "value = " . $equipment->get_id() . ">" . $equipment->get_name() . " - " . $equipment->get_stats_string() . "</option>";
-        }
-    ?>
-
-    <form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
-    <select id="weapon_select" name="weapon_select"> 
-        <option value = -1>--Choose Weapon--</option>
-        <?php
-            foreach($weapons_array as $weapon){
-                equipment_list_printer($weapon, $PlayerCharacter->get_weapon());
-            }
-        ?>
-    </select>
-    <select id="armor_select" name="armor_select"> 
-        <option value = -1>--Choose Armor--</option>
-        <?php
-            foreach($armors_array as $armor){
-                equipment_list_printer($armor, $PlayerCharacter->get_armor());
-            }
-        ?>
-    </select>
-    <select id="accessory_select" name="accessory_select"> 
-        <option value = -1>--Choose Accessory--</option>
-        <?php
-            foreach($accessories_array as $accessory){
-                equipment_list_printer($accessory, $PlayerCharacter->get_accessory());
-            }
-        ?>
-    </select>
-    <input type="submit" value="Change Equipments">
-    </form>
-
-</table>
-
-    <?php
-    	$avatar = "Kazuma";
-        switch($PlayerCharacter->get_mode()){
-        	case 0: $avatar = "Kazuma"; break;
-        	case 1: $avatar = "Aqua"; break;
-        	case 2: $avatar = "Megumin"; break;
-        	case 3: $avatar = "Darkness"; break;
-        	default: $avatar = "Kazuma";
-        }
-        echo '<img src="images/';
-        echo $avatar;
-        echo '.jpg" height="200" width="300" title = "'.$PlayerCharacter->get_avatar_description().'"> ';
-    ?>
-	<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
-	    <select id="avatar_select" name="avatar_select"> 
-	        <option value = 0 <?php if($PlayerCharacter->get_mode() === Player::MODE_KAZUMA) echo "selected"; ?>>Kazuma</option>
-	        <option value = 1 <?php if($PlayerCharacter->get_mode() === Player::MODE_AQUA) echo "selected"; ?>>Aqua</option>
-	        <option value = 2 <?php if($PlayerCharacter->get_mode() === Player::MODE_MEGUMIN) echo "selected"; ?>>Megumin</option>
-	        <option value = 3 <?php if($PlayerCharacter->get_mode() === Player::MODE_DARKNESS) echo "selected"; ?>>Darkness</option>
-	    <input type="submit" value="Change Front Line">
-	    </select>
-	</form>
-    <?php
-
-        echo "You: Level " . $PlayerCharacter->get_level() . ", Front Line: " . $avatar;
-        echo "<br>";
-        echo "HP: " . $PlayerCharacter->get_current_hp() . "/" . $PlayerCharacter->get_hp();
-        echo ", ";
-        echo "ATK: " . $PlayerCharacter->get_atk();
-        echo ", ";
-        echo "DEF: " . $PlayerCharacter->get_def();
-        echo ", ";
-        echo "CRIT: " . $PlayerCharacter->get_crit();
-        echo "<br>";
-        echo "EXP: " . $PlayerCharacter->get_exp() . "/" . $PlayerCharacter->get_required_exp();
-        echo "<br>";
-    ?>
-
-<style>
-textarea{
-    resize: none;
-}
-</style>
- <textarea rows="5" cols="60" readonly style="background-color: lightcyan">
-<?php echo $GLOBALS["console_output_buffer"]; ?>
-</textarea> 
-
-<br> Your lose streak: <?php echo $player_lose_streak ?>
-<br> Your Explosions available: <?php echo $player_stored_nukes ?>
-<br> Your total wins: <?php echo $player_wins ?>
-<br> Computer's lose streak: <?php echo $cpu_lose_streak ?>
-<br> Computer's Explosions available: <?php echo $cpu_stored_nukes ?>
-<br> Computer's total wins: <?php echo $cpu_wins ?>
-
-
-<form action="konosuba_janken.php" method="post" onsubmit = "saveScroll()">
-    <input type="submit" name="reset" value="Reset Game">
-</form>
-<?php 
-    ob_end_flush();
-?>
-<script type="text/javascript">
-	if(localStorage.getItem("scroll") !== null){
-		document.body.scrollTop = localStorage.getItem("scroll");
-		document.documentElement.scrollTop = localStorage.getItem("scroll");
-	}
-</script>
-</body>  
-</html>  

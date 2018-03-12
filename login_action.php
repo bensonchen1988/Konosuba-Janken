@@ -16,12 +16,12 @@ $result_set = $dbutil->get_login($_POST["username"]);
 if($result_set === false){
 	$dbutil->sign_up($_POST["username"], $password_encrypted);
 	$_SESSION["user"] = $_POST["username"];
-	header("Location: konosuba_janken.php");
+	header("Location: game.php");
 }
 else{
 	if(password_verify($_POST["password"], $result_set["password_encrypted"])){
 		$_SESSION["user"] = $_POST["username"];
-		header("Location: konosuba_janken.php");
+		header("Location: game.php");
 	}
 	else{
 		$_SESSION["login_message"] = "Wrong password";

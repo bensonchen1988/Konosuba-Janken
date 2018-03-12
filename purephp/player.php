@@ -53,6 +53,16 @@ require_once("equipment.php");
             return $this->character_mode;
         }
 
+        function get_mode_name(){
+            switch($this->character_mode){
+                case Player::MODE_KAZUMA: return "Kazuma";
+                case Player::MODE_AQUA: return "Aqua";
+                case Player::MODE_MEGUMIN: return "Megumin";
+                case Player::MODE_DARKNESS: return "Darkness";
+                default: return "huh? who the hell's this?";
+            }
+        }
+
         function set_mode(int $mode){
             $this->character_mode = $mode;
         }
