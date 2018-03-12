@@ -185,7 +185,7 @@ header("Location: index.php");
         var ids = setInterval(function () {
         if(localStorage.getItem("autoBattle") == "checked"){
             var random = Math.floor(Math.random() * 3);
-            if(document.getElementById("explosion_input") !== null){
+            if(document.getElementById("explosion").style.display != "none"){
                 random = Math.floor(Math.random() * 4); // 0 ~ 3
             }
             switch(random){
