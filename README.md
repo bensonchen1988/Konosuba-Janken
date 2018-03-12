@@ -46,4 +46,5 @@ Future features:
 -Randomize encounters to be within a range of player level  
 -Skill points upon leveling up, and usage of skill points to unlock skills  
 -Single use items   
--Cooldown time on switching characters, implement the concept of "turns" (each turn = 1 RPS round)
+-Cooldown time on switching characters, implement the concept of "turns" (each turn = 1 RPS round)  
+-Soundbyte upon front line changing, taking damage, dealing damage, dying, and killing monster. All unique based on who the frontline/monster is.
