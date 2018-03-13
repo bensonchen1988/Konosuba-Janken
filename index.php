@@ -1,9 +1,6 @@
 <?php
 
 session_start();
-if(isset($_SESSION["user"])){
-header("Location: game.php");
-}
 ?>
 
 <!DOCTYPE>  
@@ -24,6 +21,8 @@ Proof of concept hosted on Heroku free tier.
 Might be laggy, will most likely migrate to AWS EC2 in the future.
 <br>
 Still getting updated regularily, you might get logged out when updates occur!
+<br>
+Game data might be wiped without warning! (Game is still very short anyways)
 <br>
 <br>
 <?php

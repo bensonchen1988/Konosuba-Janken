@@ -1,6 +1,4 @@
 <?php 
-require_once("purephp/monsters_index.php");
-
 session_start();
 if(!isset($_SESSION["user"])){
 $_SESSION["login_message"] = "Please login again";
@@ -9,8 +7,9 @@ header("Location: index.php");
 
 // Process logout
 if(isset($_POST["logout"])){
+unset($_SESSION);
+session_destroy();
 $_SESSION["login_message"] = "Logged out";
-unset($_SESSION["user"]);
 header("Location: index.php");
 }
 
@@ -209,21 +208,38 @@ header("Location: index.php");
 
     //refresh user display
     function refresh(data){
-        //alert(data["console"]);
-        populate_front_line_dropdown(data["player"]["front_line_id"]);
-        populate_monster_select_dropdown(data["monster_index"]);
-        document.getElementById("console").value = data["console"];
-        var monsterText = parse_monster_data(data["monster"]);
-        document.getElementById("monster").textContent = monsterText;
-        var playerText = parse_player_data(data["player"]);
-        document.getElementById("player").textContent = playerText;
-        var metaText = parse_meta_data(data["meta_data"]);
-        document.getElementById("meta_data").textContent = metaText;
-        update_monster_image(data["monster"]["name"], data["monster"]["description"]);
-        update_front_line_image(data["player"]["mode_name"], data["player"]["mode_description"]);
-        update_farm_mode(data["farm_mode"]);
-        update_equipments(data);
-        display_explosion(data);
+    	if(data["login_status"] == "invalid"){
+    		do_redirect();
+    	}
+    	else if(data["login_status"] == "invalid_another_device"){
+    		do_redirect_device();
+    	}
+    	else{
+	        populate_front_line_dropdown(data["player"]["front_line_id"]);
+	        populate_monster_select_dropdown(data["monster_index"]);
+	        document.getElementById("console").value = data["console"];
+	        var monsterText = parse_monster_data(data["monster"]);
+	        document.getElementById("monster").textContent = monsterText;
+	        var playerText = parse_player_data(data["player"]);
+	        document.getElementById("player").textContent = playerText;
+	        var metaText = parse_meta_data(data["meta_data"]);
+	        document.getElementById("meta_data").textContent = metaText;
+	        update_monster_image(data["monster"]["name"], data["monster"]["description"]);
+	        update_front_line_image(data["player"]["mode_name"], data["player"]["mode_description"]);
+	        update_farm_mode(data["farm_mode"]);
+	        update_equipments(data);
+	        display_explosion(data);
+    	}
+    }
+
+    function do_redirect(){
+    	alert("Session expired, please login again!");
+		window.location.replace(<?php require_once("purephp/game_config.php"); echo "\"" . get_main_page() . "\""; ?>);
+    }
+
+    function do_redirect_device(){
+    	alert("Your account was logged in from another location; Please login again, and scream in despair if it wasn't you because password changing isn't implemented yet.");
+		window.location.replace(<?php require_once("purephp/game_config.php"); echo "\"" . get_main_page() . "\""; ?>);
     }
 
     function display_explosion(data){

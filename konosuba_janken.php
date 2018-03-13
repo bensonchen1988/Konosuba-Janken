@@ -8,17 +8,29 @@ header('Content-type: application/json');
     require_once("purephp/database.php");
     session_start();
 
+    $GLOBALS["json_response"] = array();
+
     if(!isset($_SESSION["user"])){
-    $_SESSION["login_message"] = "Please login again";
-    header("Location: index.php");
+        $_SESSION["login_message"] = "Please login again";
+        $GLOBALS["json_response"]["login_status"] = "invalid";
+        echo json_encode($GLOBALS["json_response"]);
+        exit();
+    }
+
+    $KonosubaDB = new KonosubaDB();
+
+    if(session_id() != $KonosubaDB->get_login($_SESSION["user"])["session_id"]){
+        unset($_SESSION);
+        $_SESSION["login_message"] = "You have been logged out because you have logged in from another device.";
+        $GLOBALS["json_response"]["login_status"] = "invalid_another_device";
+        echo json_encode($GLOBALS["json_response"]);
+        exit();
     }
     $GameLogic = new GameLogic();
     $MonsterFactory = new MonsterFactory();
     $EquipmentFactory = new EquipmentFactory();
-    $KonosubaDB = new KonosubaDB();
     // Buffer used for aggregating all event logs to output into a textarea at the end of the user to see
     $GLOBALS["console_output_buffer"] = "";
-    $GLOBALS["json_response"] = array();
 
 ?>
 

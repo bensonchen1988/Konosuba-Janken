@@ -10,7 +10,8 @@ final class Connection
 		static $connection = null;
 		if($connection === null){
 			$config = require_once("database_config.php");
-			$connection = new PDO("mysql:dbname=".$config["dbname"].";host=".$config["dbhost"], $config["username"], $config["password"]);
+			$connection = new PDO("pgsql:dbname=".$config["dbname"].";host=".$config["dbhost"].";user=".$config["username"].";password=".$config["password"].";port=".$config["port"]);
+			$connection->exec('SET search_path TO konosuba_rps');
 		}
 		return $connection;
 	}
@@ -41,46 +42,57 @@ final class KonosubaDB
 	{
 		// safe create tables for new enviroment setup
 		// Game State
-		$game_state = "CREATE TABLE IF NOT EXISTS `game_state` (
- `username` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
- `player_level` int(11) NOT NULL DEFAULT '1',
- `player_exp` int(11) NOT NULL DEFAULT '0',
- `player_weapon` int(11) NOT NULL,
- `player_armor` int(11) NOT NULL,
- `player_accessory` int(11) NOT NULL,
- `player_current_hp` int(11) NOT NULL,
- `monster_current_hp` int(11) NOT NULL,
- `monster_id` int(11) NOT NULL,
- `player_lose_streak` int(11) NOT NULL DEFAULT '0',
- `player_stored_nukes` int(11) NOT NULL DEFAULT '0',
- `player_wins` int(11) NOT NULL DEFAULT '0',
- `monster_lose_streak` int(11) NOT NULL DEFAULT '0',
- `monster_stored_nukes` int(11) NOT NULL DEFAULT '0',
- `monster_wins` int(11) NOT NULL DEFAULT '0',
- `farm_mode` int(11) NOT NULL DEFAULT '0',
- `player_avatar` int(11) NOT NULL DEFAULT '0',
- PRIMARY KEY (`username`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+		$game_state = "CREATE TABLE IF NOT EXISTS konosuba_rps.game_state (
+	username varchar(15) NOT NULL,
+	player_level int4 NOT NULL DEFAULT 1,
+	player_exp int4 NOT NULL DEFAULT 0,
+	player_weapon int4 NOT NULL,
+	player_armor int4 NOT NULL,
+	player_accessory int4 NOT NULL,
+	player_current_hp int4 NOT NULL,
+	monster_current_hp int4 NOT NULL,
+	monster_id int4 NOT NULL,
+	player_lose_streak int4 NOT NULL DEFAULT 0,
+	player_stored_nukes int4 NOT NULL DEFAULT 0,
+	player_wins int4 NOT NULL DEFAULT 0,
+	monster_lose_streak int4 NOT NULL DEFAULT 0,
+	monster_stored_nukes int4 NOT NULL DEFAULT 0,
+	monster_wins int4 NOT NULL DEFAULT 0,
+	farm_mode int4 NOT NULL DEFAULT 0,
+	player_avatar int4 NOT NULL DEFAULT 0,
+	CONSTRAINT game_state_pk PRIMARY KEY (username)
+)
+WITH (
+	OIDS=FALSE
+)";
 		$PS_game_state = $this->connection->prepare($game_state);
 		$PS_game_state->execute();
 
 		// User Login
-		$user_login = "CREATE TABLE IF NOT EXISTS`user_login` (
- `username` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
- `password_encrypted` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
- `last_login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
- PRIMARY KEY (`username`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+		$user_login = "CREATE TABLE IF NOT EXISTS konosuba_rps.user_login (
+	username varchar(15) NOT NULL,
+	password_encrypted varchar(255) NOT NULL,
+	last_login_time timestamp NOT NULL DEFAULT NOW(),
+	session_id varchar(100) NULL,
+	CONSTRAINT user_login_pk PRIMARY KEY (username)
+)
+WITH (
+	OIDS=FALSE
+)
+";
 		$PS_user_login = $this->connection->prepare($user_login);
 		$PS_user_login->execute();
 
 		// Player Inventory
-		$player_inventory = "CREATE TABLE IF NOT EXISTS `player_inventory` (
- `username` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
- `equipment_id` int(11) NOT NULL,
- `count` int(11) NOT NULL DEFAULT '1',
- PRIMARY KEY (`username`,`equipment_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+		$player_inventory = "CREATE TABLE IF NOT EXISTS konosuba_rps.player_inventory (
+	username varchar(15) NOT NULL,
+	equipment_id int4 NOT NULL,
+	count int4 NOT NULL DEFAULT 1,
+	CONSTRAINT player_inventory_pk PRIMARY KEY (username,equipment_id)
+)
+WITH (
+	OIDS=FALSE
+)";
         $PS_player_inventory = $this->connection->prepare($player_inventory);
         $PS_player_inventory->execute();
 
@@ -105,6 +117,11 @@ final class KonosubaDB
 			$PS3->execute($input);
 		}
 		// But mommy I want a Playstation 4!
+	}
+
+	public function set_session($username, $session_id){
+		$PS = $this->connection->prepare("update user_login set session_id = :session_id where username = :username");
+		$PS->execute(array(":username" => $username, ":session_id" => $session_id));
 	}
 
 	public function get_game_state($username)
