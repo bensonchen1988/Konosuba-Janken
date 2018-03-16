@@ -1,5 +1,6 @@
 <?php 
 require_once("equipment.php");
+require_once("status.php");
 
 abstract class Weapon implements Equipment
 {
@@ -15,6 +16,12 @@ abstract class Weapon implements Equipment
             $return_string .= " CRIT+".$this->get_crit();
         }
         return $return_string;
+    }
+
+    // On attack special effect proc; returns an array of Status's.
+    // Returns an empty array by default;
+    function get_procs(){
+        return array();
     }
 }
 
@@ -80,5 +87,10 @@ class FrozenKatana extends Weapon
 
     public function get_id(){
         return FrozenKatana::ID;
+    }
+
+    public function get_procs_array(){
+        // 25% chance to inflict frozen on enemy
+        return array(new Status(Status::FROZEN, 2500, 1));
     }
 }

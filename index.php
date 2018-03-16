@@ -24,6 +24,8 @@ Still getting updated regularily, you might get logged out when updates occur!
 <br>
 Game data might be wiped without warning! (Game is still very short anyways)
 <br>
+Latest Update: Implemented status effects! (March 16, 2018)
+<br>
 <br>
 <?php
 if(isset($_SESSION["login_message"])){

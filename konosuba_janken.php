@@ -6,6 +6,7 @@ header('Content-type: application/json');
     require_once("purephp/monsters_index.php");
     require_once("purephp/equipment.php");
     require_once("purephp/database.php");
+    require_once("purephp/status.php");
     session_start();
 
     $GLOBALS["json_response"] = array();
@@ -59,6 +60,8 @@ header('Content-type: application/json');
         $PlayerCharacter->set_accessory($EquipmentFactory->get_equipment($game_state["player_accessory"]));
         $Monster = $MonsterFactory->create_monster_by_id($game_state["monster_id"]);
         $Monster->set_current_hp($game_state["monster_current_hp"]);
+        $Status = new Status($game_state["monster_status"], 0, $game_state["monster_status_turns"]);
+        $Monster->set_status($Status);
         $PlayerCharacter->set_mode($game_state["player_avatar"]);
         
         $player_lose_streak =$game_state["player_lose_streak"];
@@ -68,6 +71,12 @@ header('Content-type: application/json');
         $cpu_stored_nukes = $game_state["monster_stored_nukes"];
         $cpu_wins = $game_state["monster_wins"];
         $farm_mode = $game_state["farm_mode"];
+    }
+
+    // Load inventory
+    $inventory_db = $KonosubaDB->get_inventory($_SESSION["user"]);
+    while($row = $inventory_db->fetch()){
+            $PlayerCharacter->add_inventory($row["equipment_id"]);
     }
 
     if(isset($_POST["avatar_select"])){
@@ -97,24 +106,40 @@ header('Content-type: application/json');
 
     // Update weapon equipment status
     if(isset($_POST["weapon_select"])){
-        $equipment = $EquipmentFactory->get_equipment($_POST["weapon_select"]);
-        $old_equipment = $PlayerCharacter->get_weapon();
-        $PlayerCharacter->set_weapon($equipment);
-        equipment_status_output($old_equipment, $equipment);
+        $inventory = $PlayerCharacter->get_inventory();
+        if(!in_array($_POST["weapon_select"], $inventory)){
+            $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
+        }
+        else{
+            $equipment = $EquipmentFactory->get_equipment($_POST["weapon_select"]);
+            $old_equipment = $PlayerCharacter->get_weapon();
+            $PlayerCharacter->set_weapon($equipment);
+            equipment_status_output($old_equipment, $equipment);
+        }
     }
     // Update armor equipment status
     if(isset($_POST["armor_select"])){
-        $equipment = $EquipmentFactory->get_equipment($_POST["armor_select"]);
-        $old_equipment = $PlayerCharacter->get_armor();
-        $PlayerCharacter->set_armor($equipment);
-        equipment_status_output($old_equipment, $equipment);
+        if(!in_array($_POST["armor_select"], $inventory)){
+            $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
+        }
+        else{
+            $equipment = $EquipmentFactory->get_equipment($_POST["armor_select"]);
+            $old_equipment = $PlayerCharacter->get_armor();
+            $PlayerCharacter->set_armor($equipment);
+            equipment_status_output($old_equipment, $equipment);
+        }
     }
     // Update accessory equipment status
     if(isset($_POST["accessory_select"])){
-        $equipment = $EquipmentFactory->get_equipment($_POST["accessory_select"]);
-        $old_equipment = $PlayerCharacter->get_accessory();
-        $PlayerCharacter->set_accessory($equipment);
-        equipment_status_output($old_equipment, $equipment);
+        if(!in_array($_POST["accessory_select"], $inventory)){
+            $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
+        }
+        else{
+            $equipment = $EquipmentFactory->get_equipment($_POST["accessory_select"]);
+            $old_equipment = $PlayerCharacter->get_accessory();
+            $PlayerCharacter->set_accessory($equipment);
+            equipment_status_output($old_equipment, $equipment);
+        }
     }
 
     /**
@@ -133,11 +158,6 @@ header('Content-type: application/json');
     }
 
 
-    // Load inventory
-    $inventory_db = $KonosubaDB->get_inventory($_SESSION["user"]);
-    while($row = $inventory_db->fetch()){
-            $PlayerCharacter->add_inventory($row["equipment_id"]);
-    }
     
 
     // Process monster change request
@@ -193,17 +213,19 @@ header('Content-type: application/json');
         $computer_choice = $Monster->get_choice($cpu_stored_nukes>0);
         // Output both sides' choices to the event log buffer
         $GLOBALS["console_output_buffer"] .= "Your choice: $choices[$player_input]\n";
-        $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $choices[$computer_choice]\n";
     
         // Get the winner of the fight. 
         // TODO: Rewrite method signature into get_winner(Player, Monster, MetaData), emphasis on the MetaData because meta data is being manipulated inside
-        $result = $GameLogic->get_winner($computer_choice, $player_input, $choices, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster->get_name());
+        $result = $GameLogic->get_winner($computer_choice, $player_input, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster, $choices);
 
+        $Monster->get_status()->tick();
+        
         if($result === "p"){
             // If player wins, do damage to monster
             $damage = $GameLogic->calculate_damage_on_monster($PlayerCharacter, $Monster);
             $monster_current_hp = $Monster->get_current_hp() - $damage;
             $Monster->set_current_hp($monster_current_hp);
+            // If dead, reward and next monster
             if($monster_current_hp <= 0){
                 // If monster dies from the attack, reward exp to player, check for level up (to level cap), and replace monster with new one
                 // Award exp and level up if possible
@@ -240,6 +262,10 @@ header('Content-type: application/json');
                 $cpu_lose_streak = 0;
                 // Monster is changed so it makes sense for this poor new fodder to have no Explosions :(
                 $cpu_stored_nukes = 0;
+            }
+            // Not dead, check for status procs
+            else{
+                $GameLogic->process_status_procs_on_attack($PlayerCharacter, $Monster);
             }
 
         }
@@ -298,7 +324,7 @@ header('Content-type: application/json');
     /*******************************************************
 	Store game state into DB
     ********************************************************/ 
-    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $PlayerCharacter->get_mode());
+    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $PlayerCharacter->get_mode(), $Monster->get_status()->get_status_type(), $Monster->get_status()->get_remaining_turns());
 
 
     /*******************************************************
@@ -309,7 +335,7 @@ header('Content-type: application/json');
         $monster_name_index[$ID] = $CLASSNAME::NAME;
     }
     $GLOBALS["json_response"]["console"] = $GLOBALS["console_output_buffer"];
-    $GLOBALS["json_response"]["monster"] = array("name" => $Monster->get_name(), "level" => $Monster->get_level(), "current_hp" => $Monster->get_current_hp(), "hp" => $Monster->get_hp(), "atk" => $Monster->get_atk(), "def" => $Monster->get_def(), "crit" => $Monster->get_crit(), "description" => $Monster->get_description());
+    $GLOBALS["json_response"]["monster"] = array("name" => $Monster->get_name(), "level" => $Monster->get_level(), "current_hp" => $Monster->get_current_hp(), "hp" => $Monster->get_hp(), "atk" => $Monster->get_atk(), "def" => $Monster->get_def(), "crit" => $Monster->get_crit(), "description" => $Monster->get_description(), "status" => $Monster->get_status()->get_status_type(), "status_remaining_turns" => $Monster->get_status()->get_remaining_turns());
     $GLOBALS["json_response"]["player"] = array("level" => $PlayerCharacter->get_level(), "front_line_id" => $PlayerCharacter->get_mode(), "mode_name" => $PlayerCharacter->get_mode_name(), "current_hp" => $PlayerCharacter->get_current_hp(), "hp" => $PlayerCharacter->get_hp(), "atk" => $PlayerCharacter->get_atk(), "def" => $PlayerCharacter->get_def(), "crit" => $PlayerCharacter->get_crit(), "current_exp" => $PlayerCharacter->get_exp(), "required_exp" => $PlayerCharacter->get_required_exp(), "equipped_weapon" => $PlayerCharacter->get_weapon()->get_id(), "equipped_armor" => $PlayerCharacter->get_armor()->get_id(), "equipped_accessory" => $PlayerCharacter->get_accessory()->get_id(), "mode_description" => $PlayerCharacter->get_avatar_description());
     $GLOBALS["json_response"]["meta_data"] = array("player_lose_streak" => $player_lose_streak, "player_explosions" => $player_stored_nukes, "player_wins" => $player_wins, "monster_lose_streak" => $cpu_lose_streak, "monster_explosions" => $cpu_stored_nukes, "monster_wins" => $cpu_wins);
     $GLOBALS["json_response"]["farm_mode"] = $farm_mode;

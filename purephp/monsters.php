@@ -4,10 +4,12 @@ require_once("weapons.php");
 require_once("armors.php");
 require_once("accessories.php");
 require_once("monsters_index.php");
+require_once("status.php");
 
     abstract class Monster
     {
         protected $current_hp;
+        protected $status;
         // Key: equipment_id, Value: Drop rate (out of 10000)
         protected $loot_table;
 
@@ -19,6 +21,14 @@ require_once("monsters_index.php");
         abstract function get_hp();
         abstract function get_exp();
         abstract function get_crit();
+
+        function get_status(){
+            return $this->status;
+        }
+
+        function set_status(Status $status){
+            $this->status = $status;
+        }
 
         function set_current_hp($hp)
         {
@@ -150,6 +160,7 @@ require_once("monsters_index.php");
             $this->current_hp = $this->get_hp();
             // Initialize loot table
             $this->loot_table = array(BrassKnuckles::ID=>5000, WoodenSword::ID=>5000, FrogSkin::ID=>5000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -226,6 +237,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(RockAmulet::ID=>5000, CabbageLeaf::ID=>2500);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -276,6 +288,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(LuckyPebbles::ID=>10000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_level()
         {
@@ -321,6 +334,7 @@ require_once("monsters_index.php");
         function __construct()
         {
             $this->current_hp = $this->get_hp();
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -397,6 +411,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(CoronatiteCore::ID=>10000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -444,6 +459,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(SoDamageMuchWowSuchOP::ID=>8000, TrueSoDamageMuchWowSuchOP::ID=>1000, DeadlySlimeArmor::ID=>10000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -491,6 +507,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(TrueSoDamageMuchWowSuchOP::ID=>1000, FrozenKatana::ID=>7000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -538,6 +555,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(UselessDirt::ID => 10000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -585,6 +603,7 @@ require_once("monsters_index.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(UselessDirt::ID => 10000);
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {
@@ -632,6 +651,7 @@ require_once("monsters_index.php");
         function __construct()
         {
             $this->current_hp = $this->get_hp();
+            $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
         {

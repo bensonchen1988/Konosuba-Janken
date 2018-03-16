@@ -229,4 +229,8 @@ require_once("equipment.php");
         {
             return 99;
         }
+
+        function get_procs_array(){
+            return $this->get_weapon()->get_procs_array();
+        }
     }

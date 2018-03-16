@@ -144,9 +144,9 @@ require_once("accessory_effects.php");
         * Explosions beats everything except for another Explosion, which ends in a tie.
         * Considering changing function signature
         **/
-        function get_winner(int $computer_choice, int $player_input, array $choices, int &$player_stored_nukes, 
+        function get_winner(int $computer_choice, int $player_input, int &$player_stored_nukes, 
         	int &$player_lose_streak, int &$player_wins, int &$cpu_stored_nukes, 
-        	int &$cpu_lose_streak, int &$cpu_wins, string $monster_name){
+        	int &$cpu_lose_streak, int &$cpu_wins, Monster $Monster, $choices){
             // Decrease player's stored nuke's count if player chose to use Explosion
             if($player_input === 3){
                 --$player_stored_nukes;
@@ -159,6 +159,14 @@ require_once("accessory_effects.php");
             if($player_input == -1){
                 return "e";
             }
+
+            if($Monster->get_status()->get_status_type() != Status::NORMAL){
+                switch($Monster->get_status()->get_status_type()){
+                    case Status::FROZEN: $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is FROZEN and can't move!\n"; $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $Monster->get_name()); return "p";
+                    default: break;
+                }
+            }
+            $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $choices[$computer_choice]\n";
 
             $rules = $this->get_rules();
             $player = in_array($computer_choice, $rules[$player_input]) ? 1 : 0;
@@ -173,12 +181,12 @@ require_once("accessory_effects.php");
             // Normal win check
             if($result < 0){
                 // Computer Win
-                $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $monster_name, "You");
+                $this->process_win($cpu_wins, $cpu_lose_streak, $player_lose_streak, $player_stored_nukes, $Monster->get_name(), "You");
                 return "c";
             }
             else{
                 // Player Win
-                $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $monster_name);
+                $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $Monster->get_name());
                 return "p";
             }
         }
@@ -258,6 +266,20 @@ require_once("accessory_effects.php");
                 $PlayerCharacter->set_current_hp($PlayerCharacter->get_current_hp() + $PlayerCharacter->get_atk());
                 $GLOBALS["console_output_buffer"] .= "You recovered " . $PlayerCharacter->get_atk() . " HP with Aqua's blessing!\n";
             }
+        }
+
+        public function process_status_procs_on_attack(Player $PlayerCharacter, Monster $Monster){
+            // Array of Status
+            $status_array = $PlayerCharacter->get_procs_array();
+            foreach($status_array as $status){
+                $chance = rand(1,10000);
+                if($chance <= $status->get_rate()){
+                    //proc'd
+                    $Monster->set_status($status);
+                    $GLOBALS["console_output_buffer"] .= "\n". $Monster->get_name() . " got " . $status->get_status_type() . "!";
+                }
+            }
+
         }
 
     }
