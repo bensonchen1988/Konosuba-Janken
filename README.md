@@ -1,4 +1,7 @@
 # Konosuba-Janken
+
+CURRENTLY IMPLEMENTING: Turn-based status effects on Monsters and the Player!
+
 PHP practice!
 
 This is a small personal project to practice PHP with.
