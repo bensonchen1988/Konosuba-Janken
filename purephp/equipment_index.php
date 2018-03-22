@@ -10,6 +10,7 @@ function get_equipment_index()
             BrassKnuckles::ID => "BrassKnuckles",
             WoodenSword::ID => "WoodenSword",
             FrozenKatana::ID => "FrozenKatana",
+            SlimeBomb::ID => "SlimeBomb",
             // Armors
             FrogSkin::ID => "FrogSkin",
             CabbageLeaf::ID => "CabbageLeaf",

@@ -163,6 +163,7 @@ require_once("accessory_effects.php");
             if($Monster->get_status()->get_status_type() != Status::NORMAL){
                 switch($Monster->get_status()->get_status_type()){
                     case Status::FROZEN: $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is FROZEN and can't move!\n"; $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $Monster->get_name()); return "p";
+                    case Status::POISONED: $poison_damage = floor($Monster->get_current_hp() * 0.1); $Monster->set_current_hp($Monster->get_current_hp() - $poison_damage); $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is POISONED! " . $Monster->get_name() . " took ".$poison_damage . " damage!\n"; break;
                     default: break;
                 }
             }

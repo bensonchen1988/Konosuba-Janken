@@ -21,23 +21,6 @@ class EquipmentFactory
             return new Unequipped();
         }
         return new $equipment_index[$equipment_id]();
-        /*
-        switch($equipment_id){
-            // Weapons
-            case BrassKnuckles::ID: return new BrassKnuckles();
-            case WoodenSword::ID: return new WoodenSword();
-            // Armors
-            case FrogSkin::ID: return new FrogSkin();
-            case CabbageLeaf::ID: return new CabbageLeaf();
-            // Accessories
-            case LuckyPebbles::ID: return new LuckyPebbles();
-            case RockAmulet::ID: return new RockAmulet();
-            case CoronatiteCore::ID: return new CoronatiteCore();
-            case SoDamageMuchWowSuchOP::ID: return new SoDamageMuchWowSuchOP();
-            case TrueSoDamageMuchWowSuchOP::ID: return new TrueSoDamageMuchWowSuchOP();
-            default: return new Unequipped();
-        }
-        */
     }
 }
 
@@ -67,6 +50,9 @@ interface Equipment
     * May also add description like "ATK X2 when winning with Rock"
     */
     public function get_stats_string();
+    // On attack special effect proc; returns an array of Status's.
+    // Returns an empty array by default;
+    public function get_procs_array();
 
 }
 
@@ -88,5 +74,10 @@ class Unequipped implements Equipment
     public function get_stats_string()
     {
         return "Nothing equipped";
+    }
+    // On attack special effect proc; returns an array of Status's.
+    // Returns an empty array by default;
+    public function get_procs_array(){
+        return array();
     }
 }

@@ -107,7 +107,7 @@ header('Content-type: application/json');
     // Update weapon equipment status
     if(isset($_POST["weapon_select"])){
         $inventory = $PlayerCharacter->get_inventory();
-        if(!in_array($_POST["weapon_select"], $inventory)){
+        if($_POST["weapon_select"] != -1 && !in_array($_POST["weapon_select"], $inventory)){
             $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
         }
         else{
@@ -119,7 +119,7 @@ header('Content-type: application/json');
     }
     // Update armor equipment status
     if(isset($_POST["armor_select"])){
-        if(!in_array($_POST["armor_select"], $inventory)){
+        if($_POST["armor_select"] != -1 && !in_array($_POST["armor_select"], $inventory)){
             $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
         }
         else{
@@ -131,7 +131,7 @@ header('Content-type: application/json');
     }
     // Update accessory equipment status
     if(isset($_POST["accessory_select"])){
-        if(!in_array($_POST["accessory_select"], $inventory)){
+        if($_POST["accessory_select"] != -1 && !in_array($_POST["accessory_select"], $inventory)){
             $GLOBALS["console_output_buffer"] .= "Someone's being a bad boy...\n";
         }
         else{

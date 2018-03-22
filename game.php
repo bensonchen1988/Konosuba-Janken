@@ -93,6 +93,9 @@ header("Location: index.php");
             if(data["status"] == "Frozen"){
                 status_text = status_text.fontcolor("blue");
             }
+            if(data["status"] == "Poisoned"){
+                status_text = status_text.fontcolor("green");
+            }
         }
         return data["name"] + ": Level " + data["level"]+ "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + ", STATUS: " + status_text ;
     }

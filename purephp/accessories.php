@@ -15,6 +15,11 @@ abstract class Accessory implements Equipment
     {
         return $this->stats_effect;
     }
+    // On attack special effect proc; returns an array of Status's.
+    // Returns an empty array by default;
+    public function get_procs_array(){
+        return array();
+    }
 }
 
 

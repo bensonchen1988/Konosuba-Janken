@@ -458,7 +458,7 @@ require_once("status.php");
         function __construct()
         {
             $this->current_hp = $this->get_hp();
-            $this->loot_table = array(SoDamageMuchWowSuchOP::ID=>8000, TrueSoDamageMuchWowSuchOP::ID=>1000, DeadlySlimeArmor::ID=>10000);
+            $this->loot_table = array(SoDamageMuchWowSuchOP::ID=>8000, TrueSoDamageMuchWowSuchOP::ID=>1000, DeadlySlimeArmor::ID=>10000, SlimeBomb::ID=>10000);
             $this->status = new Status(Status::NORMAL, 10000, 999);
         }
         function get_id()
