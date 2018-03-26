@@ -87,6 +87,7 @@ header("Location: index.php");
     }
 
     function parse_monster_data(data){
+        /*
         var status_text = "Normal";
         if(data["status"] != "Normal"){
             status_text = data["status"] + " for " + data["status_remaining_turns"] + " turn(s).";
@@ -98,6 +99,14 @@ header("Location: index.php");
             }
         }
         return data["name"] + ": Level " + data["level"]+ "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + ", STATUS: " + status_text ;
+        */
+        var frozen = "Frozen";
+        frozen = frozen.fontcolor("blue");
+
+        var poisoned = "Poisoned";
+        poisoned = poisoned.fontcolor("green");
+
+        return data["name"] + ": Level " + data["level"]+ "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + ", STATUS: " + data["status"].replace("Frozen", frozen).replace("Poisoned", poisoned);
     }
     function parse_player_data(data){
         return "You: Level " + data["level"]+ ", Front Line: " + data["mode_name"] + "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + "\n" + "EXP: " + data["current_exp"] +"/"+data["required_exp"];

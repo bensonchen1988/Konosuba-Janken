@@ -37,6 +37,9 @@ class Status{
 		return $this->remaining_turns;
 	}
 
+	public function set_remaining_turns($turns){
+		$this->remaining_turns = $turns;
+	}
 	// Moves forward a turn. 
 	public function tick(){
 		if($this->status !== self::NORMAL){

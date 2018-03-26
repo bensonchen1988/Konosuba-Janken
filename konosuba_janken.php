@@ -60,8 +60,13 @@ header('Content-type: application/json');
         $PlayerCharacter->set_accessory($EquipmentFactory->get_equipment($game_state["player_accessory"]));
         $Monster = $MonsterFactory->create_monster_by_id($game_state["monster_id"]);
         $Monster->set_current_hp($game_state["monster_current_hp"]);
-        $Status = new Status($game_state["monster_status"], 0, $game_state["monster_status_turns"]);
-        $Monster->set_status($Status);
+        if(empty($game_state["monster_status"])){
+        	$Monster->set_status(array(new Status(Status::NORMAL, 10000, 999)));
+        }
+        else{
+        	$Monster->set_status(unserialize(base64_decode($game_state["monster_status"])));
+        }
+
         $PlayerCharacter->set_mode($game_state["player_avatar"]);
         
         $player_lose_streak =$game_state["player_lose_streak"];
@@ -218,7 +223,7 @@ header('Content-type: application/json');
         // TODO: Rewrite method signature into get_winner(Player, Monster, MetaData), emphasis on the MetaData because meta data is being manipulated inside
         $result = $GameLogic->get_winner($computer_choice, $player_input, $player_stored_nukes, $player_lose_streak, $player_wins, $cpu_stored_nukes, $cpu_lose_streak, $cpu_wins, $Monster, $choices);
 
-        $Monster->get_status()->tick();
+        $Monster->tick_statuses();
         
         if($result === "p"){
             // If player wins, do damage to monster
@@ -324,7 +329,7 @@ header('Content-type: application/json');
     /*******************************************************
 	Store game state into DB
     ********************************************************/ 
-    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $PlayerCharacter->get_mode(), $Monster->get_status()->get_status_type(), $Monster->get_status()->get_remaining_turns());
+    $KonosubaDB->record_game_state($_SESSION["user"], $PlayerCharacter->get_level(), $PlayerCharacter->get_exp(), $PlayerCharacter->get_weapon()->get_id(), $PlayerCharacter->get_armor()->get_id(), $PlayerCharacter->get_accessory()->get_id(), $PlayerCharacter->get_current_hp(), $Monster->get_current_hp(), $Monster->get_id(), $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $PlayerCharacter->get_mode(), base64_encode(serialize($Monster->get_status())));
 
 
     /*******************************************************
@@ -335,7 +340,7 @@ header('Content-type: application/json');
         $monster_name_index[$ID] = $CLASSNAME::NAME;
     }
     $GLOBALS["json_response"]["console"] = $GLOBALS["console_output_buffer"];
-    $GLOBALS["json_response"]["monster"] = array("name" => $Monster->get_name(), "level" => $Monster->get_level(), "current_hp" => $Monster->get_current_hp(), "hp" => $Monster->get_hp(), "atk" => $Monster->get_atk(), "def" => $Monster->get_def(), "crit" => $Monster->get_crit(), "description" => $Monster->get_description(), "status" => $Monster->get_status()->get_status_type(), "status_remaining_turns" => $Monster->get_status()->get_remaining_turns());
+    $GLOBALS["json_response"]["monster"] = array("name" => $Monster->get_name(), "level" => $Monster->get_level(), "current_hp" => $Monster->get_current_hp(), "hp" => $Monster->get_hp(), "atk" => $Monster->get_atk(), "def" => $Monster->get_def(), "crit" => $Monster->get_crit(), "description" => $Monster->get_description(), "status" => $Monster->get_status_display());
     $GLOBALS["json_response"]["player"] = array("level" => $PlayerCharacter->get_level(), "front_line_id" => $PlayerCharacter->get_mode(), "mode_name" => $PlayerCharacter->get_mode_name(), "current_hp" => $PlayerCharacter->get_current_hp(), "hp" => $PlayerCharacter->get_hp(), "atk" => $PlayerCharacter->get_atk(), "def" => $PlayerCharacter->get_def(), "crit" => $PlayerCharacter->get_crit(), "current_exp" => $PlayerCharacter->get_exp(), "required_exp" => $PlayerCharacter->get_required_exp(), "equipped_weapon" => $PlayerCharacter->get_weapon()->get_id(), "equipped_armor" => $PlayerCharacter->get_armor()->get_id(), "equipped_accessory" => $PlayerCharacter->get_accessory()->get_id(), "mode_description" => $PlayerCharacter->get_avatar_description());
     $GLOBALS["json_response"]["meta_data"] = array("player_lose_streak" => $player_lose_streak, "player_explosions" => $player_stored_nukes, "player_wins" => $player_wins, "monster_lose_streak" => $cpu_lose_streak, "monster_explosions" => $cpu_stored_nukes, "monster_wins" => $cpu_wins);
     $GLOBALS["json_response"]["farm_mode"] = $farm_mode;

@@ -60,8 +60,7 @@ final class KonosubaDB
 	monster_wins int4 NOT NULL DEFAULT 0,
 	farm_mode int4 NOT NULL DEFAULT 0,
 	player_avatar int4 NOT NULL DEFAULT 0,
-	monster_status varchar(20) NOT NULL DEFAULT 'Normal'::character varying,
-	monster_status_turns int4 NOT NULL DEFAULT 1,
+	monster_status text NULL,
 	CONSTRAINT game_state_pk PRIMARY KEY (username)
 )
 WITH (
@@ -101,21 +100,21 @@ WITH (
 
 	}
 
-	public function record_game_state($username, $player_level, $player_exp, $player_weapon, $player_armor, $player_accessory, $player_current_hp, $monster_current_hp, $monster_id, $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $player_avatar, $monster_status, $monster_status_turns)
+	public function record_game_state($username, $player_level, $player_exp, $player_weapon, $player_armor, $player_accessory, $player_current_hp, $monster_current_hp, $monster_id, $player_lose_streak, $player_stored_nukes, $player_wins, $cpu_lose_streak, $cpu_stored_nukes, $cpu_wins, $farm_mode, $player_avatar, $monster_status_serialized)
 	{
 		$this->validate_username($username);
 		// Input mapping
-		$input = array(":username" => $username, ":player_level" => $player_level, ":player_exp" => $player_exp, ":player_weapon" => $player_weapon, ":player_armor" => $player_armor, ":player_accessory" => $player_accessory, ":player_current_hp" => $player_current_hp, ":monster_current_hp" => $monster_current_hp, ":monster_id" => $monster_id, ":player_lose_streak" => $player_lose_streak, ":player_stored_nukes" => $player_stored_nukes, ":player_wins" => $player_wins, ":monster_lose_streak" => $cpu_lose_streak, ":monster_stored_nukes" => $cpu_stored_nukes, ":monster_wins" => $cpu_wins, ":farm_mode" => $farm_mode, ":player_avatar" => $player_avatar, ":monster_status" => $monster_status, ":monster_status_turns" => $monster_status_turns);
+		$input = array(":username" => $username, ":player_level" => $player_level, ":player_exp" => $player_exp, ":player_weapon" => $player_weapon, ":player_armor" => $player_armor, ":player_accessory" => $player_accessory, ":player_current_hp" => $player_current_hp, ":monster_current_hp" => $monster_current_hp, ":monster_id" => $monster_id, ":player_lose_streak" => $player_lose_streak, ":player_stored_nukes" => $player_stored_nukes, ":player_wins" => $player_wins, ":monster_lose_streak" => $cpu_lose_streak, ":monster_stored_nukes" => $cpu_stored_nukes, ":monster_wins" => $cpu_wins, ":farm_mode" => $farm_mode, ":player_avatar" => $player_avatar, ":monster_status" => $monster_status_serialized);
 		// Check if username record exist
 		$result_set = $this->get_game_state($username);
 		if($result_set === false){
 			// Previous record doesn't exist, create new record
-			$PS2 = $this->connection->prepare("insert into game_state (username, player_level, player_exp, player_weapon, player_armor, player_accessory, player_current_hp, monster_current_hp, monster_id, player_lose_streak, player_stored_nukes, player_wins, monster_lose_streak, monster_stored_nukes, monster_wins, farm_mode, player_avatar, monster_status, monster_status_turns) values (:username, :player_level, :player_exp, :player_weapon, :player_armor, :player_accessory, :player_current_hp, :monster_current_hp, :monster_id, :player_lose_streak, :player_stored_nukes, :player_wins, :monster_lose_streak, :monster_stored_nukes, :monster_wins, :farm_mode, :player_avatar, :monster_status, :monster_status_turns)");
+			$PS2 = $this->connection->prepare("insert into game_state (username, player_level, player_exp, player_weapon, player_armor, player_accessory, player_current_hp, monster_current_hp, monster_id, player_lose_streak, player_stored_nukes, player_wins, monster_lose_streak, monster_stored_nukes, monster_wins, farm_mode, player_avatar, monster_status) values (:username, :player_level, :player_exp, :player_weapon, :player_armor, :player_accessory, :player_current_hp, :monster_current_hp, :monster_id, :player_lose_streak, :player_stored_nukes, :player_wins, :monster_lose_streak, :monster_stored_nukes, :monster_wins, :farm_mode, :player_avatar, :monster_status)");
 			$PS2->execute($input);
 		}
 		else{
 			// Exists, do update
-			$PS3 = $this->connection->prepare("update game_state set player_level = :player_level, player_exp = :player_exp, player_weapon = :player_weapon, player_armor = :player_armor, player_accessory = :player_accessory, player_current_hp = :player_current_hp, monster_current_hp = :monster_current_hp, monster_id = :monster_id, player_lose_streak = :player_lose_streak, player_stored_nukes = :player_stored_nukes, player_wins = :player_wins, monster_lose_streak = :monster_lose_streak, monster_stored_nukes = :monster_stored_nukes, monster_wins = :monster_wins, farm_mode = :farm_mode, player_avatar = :player_avatar, monster_status = :monster_status, monster_status_turns = :monster_status_turns where username = :username");
+			$PS3 = $this->connection->prepare("update game_state set player_level = :player_level, player_exp = :player_exp, player_weapon = :player_weapon, player_armor = :player_armor, player_accessory = :player_accessory, player_current_hp = :player_current_hp, monster_current_hp = :monster_current_hp, monster_id = :monster_id, player_lose_streak = :player_lose_streak, player_stored_nukes = :player_stored_nukes, player_wins = :player_wins, monster_lose_streak = :monster_lose_streak, monster_stored_nukes = :monster_stored_nukes, monster_wins = :monster_wins, farm_mode = :farm_mode, player_avatar = :player_avatar, monster_status = :monster_status where username = :username");
 			$PS3->execute($input);
 		}
 		// But mommy I want a Playstation 4!

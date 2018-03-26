@@ -160,12 +160,18 @@ require_once("accessory_effects.php");
                 return "e";
             }
 
-            if($Monster->get_status()->get_status_type() != Status::NORMAL){
-                switch($Monster->get_status()->get_status_type()){
-                    case Status::FROZEN: $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is FROZEN and can't move!\n"; $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $Monster->get_name()); return "p";
-                    case Status::POISONED: $poison_damage = floor($Monster->get_current_hp() * 0.1); $Monster->set_current_hp($Monster->get_current_hp() - $poison_damage); $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is POISONED! " . $Monster->get_name() . " took ".$poison_damage . " damage!\n"; break;
-                    default: break;
+            $is_disabled = false;
+            foreach($Monster->get_status() as $monster_status){
+                if($monster_status->get_status_type() != Status::NORMAL){
+                    switch($monster_status->get_status_type()){
+                        case Status::FROZEN: $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is FROZEN and can't move!\n"; $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $Monster->get_name()); $is_disabled = true; break;
+                        case Status::POISONED: $poison_damage = floor($Monster->get_current_hp() * 0.1); $Monster->set_current_hp($Monster->get_current_hp() - $poison_damage); $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is POISONED! " . $Monster->get_name() . " took ".$poison_damage . " damage!\n"; break;
+                        default: break;
+                    }
                 }
+            }
+            if($is_disabled){
+                return "p";
             }
             $GLOBALS["console_output_buffer"] .= $Monster->get_name() ."'s choice: $choices[$computer_choice]\n";
 
@@ -276,7 +282,7 @@ require_once("accessory_effects.php");
                 $chance = rand(1,10000);
                 if($chance <= $status->get_rate()){
                     //proc'd
-                    $Monster->set_status($status);
+                    $Monster->set_status(array($status));
                     $GLOBALS["console_output_buffer"] .= "\n". $Monster->get_name() . " got " . $status->get_status_type() . "!";
                 }
             }

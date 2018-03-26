@@ -22,12 +22,34 @@ require_once("status.php");
         abstract function get_exp();
         abstract function get_crit();
 
+        function get_status_display(){
+            $return_string = "";
+            foreach($this->get_status() as $status_element){
+                $return_string .= $status_element->get_status_type() . " (" . $status_element->get_remaining_turns() . ") "; 
+            }
+            return $return_string;
+        }
+
         function get_status(){
+            if(empty($this->status)){
+                return array(new Status(Status::NORMAL, 10000, 999));
+            }
             return $this->status;
         }
 
-        function set_status(Status $status){
-            $this->status = $status;
+        function set_status($status_array){
+            foreach($status_array as $status){
+                $contains = false;
+                foreach($this->status as $status_element){
+                    if($status_element->get_status_type() == $status->get_status_type()){
+                        $contains = true;
+                        $status_element->set_remaining_turns($status->get_remaining_turns());
+                    }
+                }
+                if(!$contains){
+                    array_push($this->status, $status);
+                }
+            }
         }
 
         function set_current_hp($hp)
@@ -66,6 +88,15 @@ require_once("status.php");
         function get_description()
         {
             return "Default description";
+        }
+
+        function tick_statuses(){
+            foreach($this->status as $key => $status_element){
+                $status_element->tick();
+                if($status_element->get_status_type() == Status::NORMAL){
+                    unset($this->status[$key]);
+                }
+            }
         }
 
     }
@@ -160,7 +191,7 @@ require_once("status.php");
             $this->current_hp = $this->get_hp();
             // Initialize loot table
             $this->loot_table = array(BrassKnuckles::ID=>5000, WoodenSword::ID=>5000, FrogSkin::ID=>5000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -237,7 +268,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(RockAmulet::ID=>5000, CabbageLeaf::ID=>2500);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -288,7 +319,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(LuckyPebbles::ID=>10000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_level()
         {
@@ -334,7 +365,7 @@ require_once("status.php");
         function __construct()
         {
             $this->current_hp = $this->get_hp();
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -411,7 +442,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(CoronatiteCore::ID=>10000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -459,7 +490,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(SoDamageMuchWowSuchOP::ID=>8000, TrueSoDamageMuchWowSuchOP::ID=>1000, DeadlySlimeArmor::ID=>10000, SlimeBomb::ID=>10000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -507,7 +538,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(TrueSoDamageMuchWowSuchOP::ID=>1000, FrozenKatana::ID=>7000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -555,7 +586,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(UselessDirt::ID => 10000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -603,7 +634,7 @@ require_once("status.php");
         {
             $this->current_hp = $this->get_hp();
             $this->loot_table = array(UselessDirt::ID => 10000);
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
@@ -651,7 +682,7 @@ require_once("status.php");
         function __construct()
         {
             $this->current_hp = $this->get_hp();
-            $this->status = new Status(Status::NORMAL, 10000, 999);
+            $this->status = array();
         }
         function get_id()
         {
