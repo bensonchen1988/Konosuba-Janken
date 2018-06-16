@@ -165,7 +165,8 @@ require_once("accessory_effects.php");
                 if($monster_status->get_status_type() != Status::NORMAL){
                     switch($monster_status->get_status_type()){
                         case Status::FROZEN: $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is FROZEN and can't move!\n"; $this->process_win($player_wins, $player_lose_streak, $cpu_lose_streak, $cpu_stored_nukes, "You", $Monster->get_name()); $is_disabled = true; break;
-                        case Status::POISONED: $poison_damage = floor($Monster->get_current_hp() * 0.1); $Monster->set_current_hp($Monster->get_current_hp() - $poison_damage); $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is POISONED! " . $Monster->get_name() . " took ".$poison_damage . " damage!\n"; break;
+                        case Status::POISONED: $poison_damage = floor($Monster->get_current_hp() * 0.1); $Monster->set_current_hp($Monster->get_current_hp() - $poison_damage); $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is POISONED! " . $Monster->get_name() . " took ". $poison_damage . " damage!\n"; break;
+                        case Status::ONFIRE: $burn_damage = floor($Monster->get_current_hp() * 0.25); $Monster->set_current_hp($Monster->get_current_hp() - $burn_damage); $GLOBALS["console_output_buffer"] .= $Monster->get_name() . " is ON FIRE! " . $Monster->get_name() . " took ". $burn_damage . " damage!\n"; break;
                         default: break;
                     }
                 }

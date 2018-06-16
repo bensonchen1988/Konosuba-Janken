@@ -106,7 +106,10 @@ header("Location: index.php");
         var poisoned = "Poisoned";
         poisoned = poisoned.fontcolor("green");
 
-        return data["name"] + ": Level " + data["level"]+ "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + ", STATUS: " + data["status"].replace("Frozen", frozen).replace("Poisoned", poisoned);
+        var onFire = "On Fire";
+        onFire = onFire.fontcolor("red");
+
+        return data["name"] + ": Level " + data["level"]+ "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + ", STATUS: " + data["status"].replace("Frozen", frozen).replace("Poisoned", poisoned).replace("On Fire", onFire);
     }
     function parse_player_data(data){
         return "You: Level " + data["level"]+ ", Front Line: " + data["mode_name"] + "\n" + "HP: " + data["current_hp"] + " / " + data["hp"] + ", ATK: " + data["atk"] + ", DEF: " + data["def"] + ", CRIT: " + data["crit"] + "\n" + "EXP: " + data["current_exp"] +"/"+data["required_exp"];

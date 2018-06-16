@@ -24,7 +24,7 @@ Still getting updated regularily, you might get logged out when updates occur!
 <br>
 Game data might be wiped without warning! (Game is still very short anyways)
 <br>
-Latest Update: Implemented status effects! (March 16, 2018)
+Latest Update: Implemented concurrent status effects! (March 25, 2018)
 <br>
 <br>
 <?php

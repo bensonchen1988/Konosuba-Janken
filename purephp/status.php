@@ -4,6 +4,8 @@ class Status{
 	const NORMAL = "Normal";
 	// 10% current hp damage each turn
 	const POISONED = "Poisoned";
+	// 25% current hp damage each turn
+	const ONFIRE = "On Fire";
 	// Skip 1 turn, free win for other side
 	const FROZEN = "Frozen";
 	// atk 2x

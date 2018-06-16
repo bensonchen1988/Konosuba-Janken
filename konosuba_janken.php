@@ -271,6 +271,10 @@ header('Content-type: application/json');
             // Not dead, check for status procs
             else{
                 $GameLogic->process_status_procs_on_attack($PlayerCharacter, $Monster);
+                if ($player_input == 3) {
+                    $Monster->set_status(array(new Status(Status::ONFIRE, 100, 4)));
+                    $GLOBALS["console_output_buffer"] .= "\n". $Monster->get_name() . " caught on fire from the explosion!";
+                }
             }
 
         }
